@@ -10,6 +10,7 @@ site_map(
   lon_0 = NULL,
   places = NULL,
   label_sites = TRUE,
+  arrow = c("dart", "delta"),
   title = NULL,
   out_dir = landfall_paths()$output,
   name = NULL,
@@ -34,6 +35,9 @@ own.}
 
 \item{label_sites}{Mark the other MAPPPD sites within the window.}
 
+\item{arrow}{The north arrow glyph, \code{"dart"} or \code{"delta"}; see
+\code{\link[=north_arrow_circle]{north_arrow_circle()}}.}
+
 \item{title}{Figure title, or \code{NULL} for the site's name and the radius.}
 
 \item{out_dir}{Folder to write into, or \code{NULL} to write nothing.}
@@ -49,7 +53,8 @@ own.}
 \item{paths}{The list from \code{\link[=landfall_paths]{landfall_paths()}}.}
 }
 \value{
-The ggplot object, invisibly, with attribute \code{layers}.
+The ggplot object, invisibly, with attribute \code{map_layers}, the
+list from \code{\link[=site_map_layers]{site_map_layers()}}.
 }
 \description{
 A square relief map of \code{radius_km} around the site, with the other MAPPPD

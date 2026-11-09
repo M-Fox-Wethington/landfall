@@ -25,19 +25,53 @@ CM_PER_IN <- 2.54
 SCALE_PAD_CM     <- 0.8
 SCALE_WIDTH_HINT <- 0.22
 ARROW_PAD_CM     <- 0.25
-ARROW_W_CM       <- 0.7
-ARROW_H_CM       <- 1.0
+# The circled arrow needs a square box, because the ring is drawn inside a
+# square viewport centered in whatever box it is given.
+ARROW_W_CM       <- 1.2
+ARROW_H_CM       <- 1.2
+# The height of the bar itself, which its own numbers then sit above.
+SCALE_BAR_IN     <- 0.10
 
-# How far past the end of the bar its own label runs, and how tall the bar and
-# its label are together. Both were measured by drawing the map twice, once
-# with the annotations and once without, and reading the bounding box of every
-# pixel that changed. The label sits to the right of the bar on the same line,
-# which is why the block is wide and short. It ran 0.23 inches past the bar
-# under a "10 km" label on a 10.94 inch panel and 0.29 inches under "5 km" on a
-# 6.44 inch panel, and stood 0.11 inches tall at both; 0.45 and 0.25 leave room
-# for a longer label such as "100 km".
+# How far past the end of the bar its own numbers run, and how tall the bar
+# and its numbers are together. Both were measured by drawing the map twice,
+# once with map_furniture() and once without, and reading the bounding box of
+# every pixel that changed. The last number sits past the end of the bar on
+# the same line, which is why the block is wide and short: it ran 0.23 inches
+# past the bar on an 11.50 inch panel and stood 0.115 inches tall there and on
+# a 6.52 inch panel. The two figures below leave room for a longer number such
+# as "100 km".
 SCALE_LABEL_IN <- 0.45
-SCALE_BLOCK_IN <- 0.25
+SCALE_BLOCK_IN <- 0.22
+
+# The scale bar and the north arrow, built here rather than in the map, so the
+# rectangles reserved above and the things actually drawn cannot drift apart.
+# The measurement that set those rectangles draws a map with and without this.
+map_furniture <- function(arrow = c("dart", "delta")) {
+  arrow <- match.arg(arrow)
+  list(
+    # A filled alternating bar, not ticks. Tick marks in the coastline blue
+    # sit at about 1.6 to 1 against this ocean and disappear into the relief,
+    # which is the same reason the Antarctic Sound sheet uses a bar.
+    ggspatial::annotation_scale(
+      location = "bl", width_hint = SCALE_WIDTH_HINT, style = "bar",
+      bar_cols = c(COLORS$title, "white"), text_col = COLORS$title,
+      line_col = COLORS$title, text_cex = 0.8, line_width = 0.8,
+      height = grid::unit(SCALE_BAR_IN, "in"),
+      pad_x = grid::unit(SCALE_PAD_CM, "cm"),
+      pad_y = grid::unit(SCALE_PAD_CM, "cm")),
+    # The padding is passed rather than left to ggspatial's own default,
+    # because the reservation above is measured from these same numbers.
+    ggspatial::annotation_north_arrow(
+      location = "tr", which_north = "true",
+      style = north_arrow_circle(arrow, halo = ggplot2::alpha(MAP_PAPER, 0.85),
+                                 line_col = MAP_COAST, fill = MAP_COAST,
+                                 bg = MAP_PAPER, text_col = MAP_COAST,
+                                 text_size = 11),
+      pad_x = grid::unit(ARROW_PAD_CM, "cm"),
+      pad_y = grid::unit(ARROW_PAD_CM, "cm"),
+      height = grid::unit(ARROW_H_CM, "cm"),
+      width = grid::unit(ARROW_W_CM, "cm")))
+}
 
 #' The drawn size of a map panel, in inches
 #'

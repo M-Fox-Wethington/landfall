@@ -99,6 +99,40 @@ change what existing calls do, and each is listed as such.
   marker, because none of those reaches the layout as a box of its own.
 * `site_map()` gained `overwrite`, to match `site_report()`.
 
+## What the map looks like
+
+* **Changed.** The hypsometric ramp is stretched to each window's own relief,
+  from the sea to the 99.5th percentile of the land inside the drawn frame,
+  and the caption names that top. Held to the old fixed scale running to
+  2400 m, a 25 km window round a landing site was drawn in two of the eight
+  colors and read as flat. A color now means a height within one map and not
+  between two, which is why the caption carries the number. The pad is left
+  out of the percentile, because ground in the pad is never drawn.
+* **Changed.** The ramp runs continuously between its eight anchors, mixed in
+  Lab. Eight flat steps over a kilometer of relief printed as hard-edged bands
+  that read as contours nobody drew.
+* **Changed.** The scale bar is a filled alternating bar rather than tick
+  marks, which sit at about 1.6 to 1 against the ocean and disappear into the
+  relief. This is the treatment the Antarctic Sound sheet uses.
+* **Changed.** The north arrow is a glyph inside a ring with the letter above
+  it, on a backing in the paper color, in place of ggspatial's bare line and
+  triangle. `north_arrow_circle()` draws a plain arrowhead or a swept delta
+  and takes ggspatial's own style arguments, so it can be used in any map;
+  `site_map(arrow = "delta")` and `site_report(arrow = "delta")` pick the
+  second.
+* `site_map()` wraps its caption. It never did, and the caption had grown long
+  enough to run off the page.
+* The two annotations are built in `map_furniture()`, so the rectangles
+  reserved for them and the things actually drawn cannot drift apart.
+
+## Returned objects
+
+* **Changed.** `site_map()` and `site_report()` return the map layers in an
+  attribute called `map_layers`, not `layers`. ggplot2 4.0 keeps a plot's own
+  properties in its attributes, so an attribute called `layers` replaced the
+  plot's layers and the returned figure could not be drawn or added to. The
+  files written were never affected, because they are written first.
+
 ## Files and sources
 
 * **Changed.** A report's default file name carries the site, the species, the

@@ -69,7 +69,7 @@ terrain_signature <- function(window, coast, grid_res, z_factor, shadow_floor,
     paste0("coast_source=", coast$source),
     paste0("coast_files=", file_identity(coast$files)),
     paste0("palette=", paste(HYPSO_PALETTE, collapse = ",")),
-    paste0("breaks=", paste(HYPSO_BREAKS, collapse = ",")),
+    paste0("breaks=stretched-continuous:", paste(HYPSO_BREAKS, collapse = ",")),
     paste0("ocean=", MAP_OCEAN),
     paste0("bare_land=", MAP_LAND_BARE))
 }
@@ -141,7 +141,8 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
     message("Loading cached relief: ", basename(rgb_path), " (", meta[1], ")")
     return(list(rgb = terra::rast(rgb_path), source = meta[1],
                 grid_res = as.numeric(meta[2]),
-                sea_level = if (length(meta) >= 3) as.numeric(meta[3]) else NA_real_))
+                sea_level = if (length(meta) >= 3) as.numeric(meta[3]) else NA_real_,
+                ramp_max = if (length(meta) >= 4) as.numeric(meta[4]) else NA_real_))
   }
   if (file.exists(rgb_path)) {
     message("The cached relief for this window was built from different inputs; rebuilding.")
@@ -201,17 +202,50 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
   v_hs[is.na(v_hs)] <- 0.5
   shade <- shadow_floor + (1 - shadow_floor) * pmin(1, pmax(0, v_hs))
 
-  # findInterval() alone returns 0 below the first break and the palette has
-  # one color per break, so the index is clamped to the palette rather than
-  # coerced inside the breaks, which would make the last color unreachable.
-  idx <- pmax(1L, pmin(length(HYPSO_PALETTE), findInterval(v_dem, HYPSO_BREAKS)))
-  pal   <- grDevices::col2rgb(HYPSO_PALETTE) / 255
+  # The tint is stretched to this window's own relief rather than held to a
+  # scale running to 2400 m. A 25 km window around a Peninsula landing rarely
+  # holds ground above a few hundred meters, and against fixed breaks such a
+  # site is drawn in two of the eight colors and reads as flat. The ramp keeps
+  # its shape, which is finer low down, and its top is the 99.5th percentile
+  # of the land inside the drawn frame. The pad is left out, because ground in
+  # the pad is never drawn and including it moves the number. Since the top
+  # moves with the window, the caption says what it is: these colors mean
+  # something within one map and are not comparable between two.
+  frame <- terra::crop(dem, terra::ext(window$xlim[1], window$xlim[2],
+                                       window$ylim[1], window$ylim[2]))
+  v_frame <- terra::values(frame, mat = FALSE)
+  v_frame <- v_frame[!is.na(v_frame) & v_frame > 0]
+  ramp_max <- if (length(v_frame) >= 100) {
+    as.numeric(stats::quantile(v_frame, 0.995))
+  } else NA_real_
+  breaks <- if (is.na(ramp_max) || ramp_max < 20) {
+    ramp_max <- max(HYPSO_BREAKS)
+    HYPSO_BREAKS
+  } else {
+    HYPSO_BREAKS / max(HYPSO_BREAKS) * ramp_max
+  }
+  message(sprintf("Tinting from the sea to %.0f m, which is the 99.5th percentile of the land in the frame; the highest ground here is %.0f m.",
+                  ramp_max, if (length(v_frame)) max(v_frame) else 0))
+  rm(frame, v_frame)
+
   ocean <- grDevices::col2rgb(MAP_OCEAN) / 255
   bare  <- grDevices::col2rgb(MAP_LAND_BARE) / 255
 
   relief    <- is_land & has_dem
   bare_land <- is_land & !has_dem
   water     <- !is_land
+
+  # The tint runs continuously between the eight anchors rather than stepping
+  # through them. Eight flat steps over a kilometer of relief print as
+  # hard-edged bands that a reader takes for contours nobody drew. Each cell's
+  # place along the ramp is found by interpolating the breaks, so the ramp
+  # keeps its shape, which is finer low down, and the color is mixed in Lab so
+  # the steps between the anchors are even to the eye.
+  pos <- numeric(length(v_dem))
+  pos[relief] <- stats::approx(breaks, seq(0, 1, length.out = length(breaks)),
+                               xout = v_dem[relief], rule = 2)$y
+  tint <- matrix(0, nrow = length(v_dem), ncol = 3)
+  tint[relief, ] <- grDevices::colorRamp(HYPSO_PALETTE, space = "Lab")(pos[relief]) / 255
   if (any(bare_land)) {
     message(sprintf(paste("REMA holds no height for %.1f%% of the land here (%s of %s",
                           "cells); it is drawn as flat land, not as water."),
@@ -221,7 +255,7 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
 
   bands <- lapply(1:3, function(ch) {
     v <- numeric(length(v_dem))
-    v[relief]    <- pmin(1, pal[ch, idx[relief]] * shade[relief])
+    v[relief]    <- pmin(1, tint[relief, ch] * shade[relief])
     v[bare_land] <- bare[ch, 1]
     v[water]     <- ocean[ch, 1]
     terra::setValues(terra::rast(dem), round(v * 255))
@@ -230,9 +264,11 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
   names(rgb) <- c("red", "green", "blue")
   rgb <- terra::writeRaster(rgb, rgb_path, overwrite = TRUE, datatype = "INT1U",
                             gdal = c("COMPRESS=LZW", "TILED=YES"))
-  writeLines(c(elev$source, as.character(grid_res), as.character(sea_level)), meta_path)
+  writeLines(c(elev$source, as.character(grid_res), as.character(sea_level),
+               as.character(ramp_max)), meta_path)
   writeLines(sig, sig_path)
-  list(rgb = rgb, source = elev$source, grid_res = grid_res, sea_level = sea_level)
+  list(rgb = rgb, source = elev$source, grid_res = grid_res, sea_level = sea_level,
+       ramp_max = ramp_max)
 }
 
 #' Remove cached relief rasters

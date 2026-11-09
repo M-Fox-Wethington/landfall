@@ -156,10 +156,26 @@ made in January 2027 belongs to season 2026.
 ## Style
 
 The maps follow the BRI neighborhood maps: REMA elevation under a
-four-direction Imhof hillshade, an eight-step hypsometric ice ramp, the ocean
-in slate blue, the ADD coastline, ice shelves, contours and rock outcrops, and
-a parchment page. The charts use the BRI figure style and its Dieter Rams
+four-direction Imhof hillshade, a hypsometric ice ramp, the ocean in slate
+blue, the ADD coastline, ice shelves, contours and rock outcrops, and a
+parchment page. The charts use the BRI figure style and its Dieter Rams
 palette.
+
+The ramp is stretched to each window's own relief, from the sea to the 99.5th
+percentile of the land inside the drawn frame, and the caption says what that
+top is. Held instead to a fixed scale running to 2400 m, a 25 km window round
+a landing site uses two of the eight colors and reads as flat. The cost is
+that a color means a height within one map and not between two, which is why
+the caption carries the number. The ramp runs continuously between its eight
+anchors, mixed in Lab: eight flat steps over a kilometer of relief print as
+hard-edged bands a reader takes for contours nobody drew.
+
+The scale bar is a filled alternating bar rather than tick marks, which sit at
+about 1.6 to 1 against the ocean and disappear into the relief. The north
+arrow is a glyph inside a ring with the letter above it, on a backing in the
+paper color, since without one the ring and the letter are read against the
+terrain. `north_arrow_circle()` draws a plain arrowhead or a swept delta, and
+`site_map(arrow = "delta")` picks the second.
 
 ## What the wall-map work found, and what it means here
 

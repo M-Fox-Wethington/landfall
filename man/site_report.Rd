@@ -17,6 +17,7 @@ site_report(
   lon_0 = NULL,
   places = NULL,
   label_sites = TRUE,
+  arrow = c("dart", "delta"),
   title = NULL,
   out_dir = landfall_paths()$output,
   name = NULL,
@@ -59,6 +60,9 @@ site's own.}
 
 \item{label_sites}{Mark the other MAPPPD sites within the map.}
 
+\item{arrow}{The north arrow glyph, \code{"dart"} or \code{"delta"}; see
+\code{\link[=north_arrow_circle]{north_arrow_circle()}}.}
+
 \item{title}{Figure title, or \code{NULL} for the site's name.}
 
 \item{out_dir}{Folder to write into, or \code{NULL} to write nothing.}
@@ -76,7 +80,7 @@ the count type and the date, so one observation cannot overwrite another.}
 }
 \value{
 The cowplot object, invisibly, with attributes \code{context} (the list
-from \code{\link[=count_context]{count_context()}}), \code{record}, \code{count}, \code{layers} and \code{files}, the
+from \code{\link[=count_context]{count_context()}}), \code{record}, \code{count}, \code{map_layers} and \code{files}, the
 paths written.
 }
 \description{

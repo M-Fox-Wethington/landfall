@@ -94,11 +94,15 @@ named_points <- function(places, neighbors, crs, size_pt) {
 #' @param contours Draw the contours.
 #' @param panel_in The drawn panel's width and height in inches, from
 #'   [map_panel_inches()], or `NULL` to reserve nothing.
+#' @param arrow The north arrow glyph, `"dart"` or `"delta"`; see
+#'   [north_arrow_circle()].
 #' @return A ggplot object, with the attributes `window`, `panel_in` and
 #'   `barrier`, which [check_map_labels()] reads.
 #' @export
 site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels = 12,
-                          text_pt = 9, contours = TRUE, panel_in = NULL) {
+                          text_pt = 9, contours = TRUE, panel_in = NULL,
+                          arrow = c("dart", "delta")) {
+  arrow <- match.arg(arrow)
   w <- L$window
   site <- site_sf(w$site, w$crs)
   neighbors <- NULL
@@ -163,19 +167,7 @@ site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels 
       segment.size = 0.5, seed = 42, min.segment.length = 0) +
     coord_sf(crs = w$crs, xlim = w$xlim, ylim = w$ylim, expand = FALSE,
              datum = sf::st_crs(4326)) +
-    ggspatial::annotation_scale(location = "bl", width_hint = SCALE_WIDTH_HINT,
-                                style = "ticks", text_col = MAP_COAST,
-                                line_col = MAP_COAST,
-                                pad_x = unit(SCALE_PAD_CM, "cm"),
-                                pad_y = unit(SCALE_PAD_CM, "cm"), text_cex = 0.75) +
-    # The padding is passed rather than left to ggspatial's own default,
-    # because the reservation above is measured from these same numbers.
-    ggspatial::annotation_north_arrow(
-      location = "tr", which_north = "true",
-      style = ggspatial::north_arrow_minimal(line_col = MAP_COAST, text_col = MAP_COAST,
-                                             fill = MAP_COAST),
-      pad_x = unit(ARROW_PAD_CM, "cm"), pad_y = unit(ARROW_PAD_CM, "cm"),
-      height = unit(ARROW_H_CM, "cm"), width = unit(ARROW_W_CM, "cm")) +
+    map_furniture(arrow) +
     theme_site_map()
   with_map_attrs(p, w, panel_in, barrier)
 }
@@ -244,9 +236,17 @@ map_caption <- function(L) {
   } else {
     sprintf("heights above the local sea surface, %.1f m on the WGS84 ellipsoid", sea)
   }
+  # The tint is stretched to this window's own relief, so what it runs to is
+  # part of reading it and a color here does not mean the same height on
+  # another map.
+  top <- L$terrain$ramp_max
+  tint <- if (is.null(top) || is.na(top)) "" else {
+    sprintf(" Land is tinted from the sea to %.0f m, stretched to this window.",
+            top)
+  }
   sprintf(paste("Relief: REMA v2.0 %s mosaic (Howat et al.), Polar Geospatial Center,",
-                "%g m grid; %s. %s: SCAR Antarctic Digital Database (%s)."),
-          L$terrain$source, L$terrain$grid_res, datum, layers, L$coast$source)
+                "%g m grid; %s.%s %s: SCAR Antarctic Digital Database (%s)."),
+          L$terrain$source, L$terrain$grid_res, datum, tint, layers, L$coast$source)
 }
 
 #' Figure: the map of a site's surroundings
@@ -268,25 +268,38 @@ map_caption <- function(L) {
 #' @param dpi Resolution of the PNG.
 #' @param paths The list from [landfall_paths()].
 #' @inheritParams site_map_plot
-#' @return The ggplot object, invisibly, with attribute `layers`.
+#' @return The ggplot object, invisibly, with attribute `map_layers`, the
+#'   list from [site_map_layers()].
 #' @export
 site_map <- function(site, radius_km = 25, lon_0 = NULL, places = NULL, label_sites = TRUE,
-                     title = NULL, out_dir = landfall_paths()$output, name = NULL,
+                     arrow = c("dart", "delta"), title = NULL,
+                     out_dir = landfall_paths()$output, name = NULL,
                      overwrite = FALSE, width = 12, height = 12, dpi = 300,
                      paths = landfall_paths()) {
   site <- as_site(site)
   w <- site_window(site, radius_km, lon_0 = lon_0)
   L <- site_map_layers(w, paths)
   if (is.null(title)) title <- sprintf("%s, %g km around the site", site$name, radius_km)
-  caption <- map_caption(L)
+  # A plot caption does not wrap, so it is wrapped here and the panel is then
+  # measured with it, because every line it takes is height the panel loses.
+  # About twenty characters of 7 point type fit in an inch, and half an inch
+  # is left for the margins.
+  caption <- paste(strwrap(map_caption(L), width = max(60, floor(20 * (width - 0.5)))),
+                   collapse = "
+")
   panel_in <- map_panel_inches(w, width, height, title = title, caption = caption,
                                theme_extra = theme_site_map_titled())
-  p <- site_map_plot(L, places = places, label_sites = label_sites, panel_in = panel_in)
+  p <- site_map_plot(L, places = places, label_sites = label_sites,
+                     panel_in = panel_in, arrow = arrow)
   barrier <- attr(p, "barrier")
   p <- p + labs(title = title, caption = caption) + theme_site_map_titled()
   p <- with_map_attrs(p, w, panel_in, barrier)
   if (is.null(name)) name <- sprintf("%s_map_%gkm", tolower(site$code), radius_km)
   save_figure(p, name, out_dir, width = width, height = height, dpi = dpi, bg = MAP_PAPER,
               overwrite = overwrite)
-  invisible(structure(p, layers = L))
+  # The attribute is map_layers and not layers, because ggplot2 4.0 keeps a
+  # plot's own properties in its attributes, so an attribute called layers
+  # replaces the plot's layers and returns a figure that cannot be drawn.
+  attr(p, "map_layers") <- L
+  invisible(p)
 }

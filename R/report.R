@@ -45,6 +45,8 @@ mapppd_version <- function() {
 #'   site's own.
 #' @param places A data frame of place names for the map, or `NULL`.
 #' @param label_sites Mark the other MAPPPD sites within the map.
+#' @param arrow The north arrow glyph, `"dart"` or `"delta"`; see
+#'   [north_arrow_circle()].
 #' @param title Figure title, or `NULL` for the site's name.
 #' @param out_dir Folder to write into, or `NULL` to write nothing.
 #' @param name File name stem. The default identifies the site, the species,
@@ -54,7 +56,7 @@ mapppd_version <- function() {
 #' @param dpi Resolution of the PNG.
 #' @param paths The list from [landfall_paths()].
 #' @return The cowplot object, invisibly, with attributes `context` (the list
-#'   from [count_context()]), `record`, `count`, `layers` and `files`, the
+#'   from [count_context()]), `record`, `count`, `map_layers` and `files`, the
 #'   paths written.
 #' @examples
 #' \dontrun{
@@ -65,6 +67,7 @@ mapppd_version <- function() {
 site_report <- function(site, count, type = c("nests", "chicks", "adults"), species = NULL,
                         date = NULL, season = NULL, accuracy = NA, source = NULL,
                         radius_km = 25, lon_0 = NULL, places = NULL, label_sites = TRUE,
+                        arrow = c("dart", "delta"),
                         title = NULL, out_dir = landfall_paths()$output, name = NULL,
                         overwrite = FALSE, width = 16, height = 9, dpi = 300,
                         paths = landfall_paths()) {
@@ -100,7 +103,8 @@ site_report <- function(site, count, type = c("nests", "chicks", "adults"), spec
   map_h <- 0.78
   map_w <- map_h * height / width
   map <- site_map_plot(L, places = places, label_sites = label_sites, text_pt = 8.5,
-                       panel_in = map_panel_inches(w, map_w * width, map_h * height))
+                       panel_in = map_panel_inches(w, map_w * width, map_h * height),
+                       arrow = arrow)
 
   # Other species get a panel when the site holds a nest or chick count of
   # them, or counts from more than one season; a single count of adults, such
@@ -178,6 +182,9 @@ site_report <- function(site, count, type = c("nests", "chicks", "adults"), spec
   files <- save_figure(fig, name, out_dir, width = width, height = height, dpi = dpi,
                        bg = "white", overwrite = overwrite)
   message(paste(ctx$sentences, collapse = "\n"))
-  invisible(structure(fig, context = ctx, record = record, count = new, layers = L,
-                      files = files))
+  # map_layers and not layers: ggplot2 4.0 keeps a plot's own properties in
+  # its attributes, so an attribute called layers replaces the figure's layers
+  # and returns something that cannot be drawn.
+  invisible(structure(fig, context = ctx, record = record, count = new,
+                      map_layers = L, files = files))
 }

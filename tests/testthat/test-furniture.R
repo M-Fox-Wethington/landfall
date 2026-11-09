@@ -12,21 +12,19 @@ test_that("the panel of a square window is square, and a title takes height from
 })
 
 test_that("the reserved rectangles hold the furniture that was measured on a render", {
-  # These four numbers are the bounding box of every pixel that changed when
-  # the map was drawn twice, once with the two annotations and once without,
-  # at a panel of 10.9426 inches. They are inches from the panel's bottom left
-  # corner for the bar, and from its top right corner for the arrow.
-  pw <- 10.9426
+  # These numbers are the bounding box of every pixel that changed when the
+  # map was drawn twice, once with map_furniture() and once without, on a
+  # panel of 11.5039 inches at 200 pixels to the inch. They are inches from
+  # the panel's bottom left corner.
+  pw <- 11.5039
   b <- furniture_boxes(c(pw, pw))
   bar <- b[b$what == "scale bar", ]
   arrow <- b[b$what == "north arrow", ]
 
-  expect_true(bar$x1 < 0.309 && bar$x2 > 2.949)
-  expect_true(bar$y1 < 0.308 && bar$y2 > 0.421)
-  # The arrow's ink ran 0.187 to 0.280 inches in from the panel's right edge
-  # and 0.088 to 0.501 inches down from its top.
-  expect_true(arrow$x1 < pw - 0.280 && arrow$x2 > pw - 0.187)
-  expect_true(arrow$y1 < pw - 0.501 && arrow$y2 > pw - 0.088)
+  expect_true(bar$x1 <= 0.309 && bar$x2 >= 3.084)
+  expect_true(bar$y1 <= 0.309 && bar$y2 >= 0.424)
+  expect_true(arrow$x1 <= 10.979 && arrow$x2 >= 11.359)
+  expect_true(arrow$y1 <= 10.929 && arrow$y2 >= 11.439)
 })
 
 test_that("the bar's reservation grows with the panel and the arrow's does not", {
