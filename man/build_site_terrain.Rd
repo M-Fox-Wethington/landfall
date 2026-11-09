@@ -10,13 +10,16 @@ build_site_terrain(
   grid_res = NULL,
   z_factor = 4,
   shadow_floor = 0.55,
+  collar_m = 60,
+  rebuild = FALSE,
   paths = landfall_paths()
 )
 }
 \arguments{
 \item{window}{A \code{\link[=site_window]{site_window()}}.}
 
-\item{coast}{The list from \code{\link[=load_coast]{load_coast()}}, used to mask the elevation.}
+\item{coast}{The list from \code{\link[=load_coast]{load_coast()}}, used to measure the sea surface
+and to separate land from water.}
 
 \item{grid_res}{Cell size of the relief in meters. \code{NULL} uses 50 m on the
 32 m tiles and 200 m on the 1 km mosaic.}
@@ -25,23 +28,39 @@ build_site_terrain(
 
 \item{shadow_floor}{Darkest shading, as a share of the full color.}
 
+\item{collar_m}{How far beyond the drawn land the model is kept for the
+hillshade, in meters.}
+
+\item{rebuild}{Build again even when a matching cache is on disk.}
+
 \item{paths}{The list from \code{\link[=landfall_paths]{landfall_paths()}}.}
 }
 \value{
 A list with \code{rgb}, a three-band SpatRaster, \code{source} (\code{"32 m"} or
-\code{"1 km"}) and \code{grid_res}.
+\code{"1 km"}), \code{grid_res} and \code{sea_level}, the separation taken off the model
+in meters.
 }
 \description{
-Mosaics the REMA 32 m tiles over the window (or crops the 1 km mosaic when
-a tile is missing), projects the elevation onto the window's grid, masks it
-to the coastline, shades it and colors it, and caches the result in the
-terrain cache so a second call for the same window loads it from disk.
+Mosaics the REMA 32 m tiles over the window (or crops the 1 km mosaic when a
+tile is missing), projects the elevation onto the window's grid, measures the
+sea surface from the window's own water and takes it off, shades the model,
+colors it, and caches the result so a second call for the same window loads
+it from disk.
 }
 \details{
 The recipe is the one of the BRI neighborhood maps. Elevation is multiplied
 by \code{z_factor} and shaded from the northwest (0.45), north (0.20), northeast
 (0.15) and west (0.20). The ice ramp runs from near white at sea level to a
-gray-blue above 2400 m in eight steps, shadows stop at \code{shadow_floor}, and
-cells with no elevation, which are water, take the ocean color so the relief
-blends into the ocean panel.
+gray-blue above 2400 m in eight steps and shadows stop at \code{shadow_floor}.
+
+The hillshade is computed on the model cut to a collar beyond the drawn land,
+so slopes at the shore still have neighbors, and the coloring then uses the
+coastline itself. Water takes the ocean color. Land for which REMA holds no
+height takes a flat land tint and the share of it is reported, because
+painting it as ocean would invent open water where the coastline says there
+is ground.
+
+The cached raster is reused only when a signature of the window, the source
+files, the grid and every shading and color setting matches. Pass
+\code{rebuild = TRUE} to force a rebuild, or see \code{\link[=clear_terrain_cache]{clear_terrain_cache()}}.
 }

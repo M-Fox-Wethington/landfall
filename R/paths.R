@@ -7,14 +7,19 @@
 #' point at copies on disk before a map can be drawn, and `output` has to be set
 #' before a figure is written.
 #'
+#' An omitted argument leaves a setting as it is. Passing `NA` clears one, and
+#' `reset = TRUE` clears them all, so a setting made earlier in the session can
+#' be taken back rather than only replaced.
+#'
 #' @details
 #' The ADD layers default to this layout under `spatial`, which is the layout
 #' of the BRI priority-map bundle. Each can also be set on its own.
 #' * `coastline_hr`:
 #'   `add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg`, the
-#'   ADD v7.10 high-resolution coastline polygons, which hold land, ice shelf,
+#'   ADD high-resolution coastline polygons, which hold land, ice shelf,
 #'   ice tongue and rumple classes in one layer. The maps use it when it is on
-#'   disk.
+#'   disk. Point it at a newer release to use one; the caption reads the
+#'   version from the file name.
 #' * `coastline` and `iceshelves`:
 #'   `Continent_ADD/Antarctica_Coastline_med_res_poly.shp` and
 #'   `iceshelves/medium_res_IceShelfs.shp`, the medium-resolution layers, used
@@ -40,6 +45,7 @@
 #' @param output Folder the figure functions write to. While it is `NULL`,
 #'   the default, the figure functions return their plots and write nothing.
 #' @param terra_tmp Folder for terra's temporary rasters.
+#' @param reset Clear every stored setting before applying the arguments.
 #' @return The resolved list of paths, invisibly when any argument was given.
 #' @examples
 #' \dontrun{
@@ -49,21 +55,28 @@
 #'   output  = "D:/landfall/figures"
 #' )
 #' landfall_paths()$rema_dir
+#' landfall_paths(output = NA)   # stop writing figures
+#' landfall_paths(reset = TRUE)  # forget everything set this session
 #' }
 #' @export
 landfall_paths <- function(cache = NULL, rema_dir = NULL, rema_1km = NULL, terrain_cache = NULL,
                            spatial = NULL, coastline_hr = NULL, coastline = NULL,
                            iceshelves = NULL, rock = NULL, contours = NULL, output = NULL,
-                           terra_tmp = NULL) {
+                           terra_tmp = NULL, reset = FALSE) {
   given <- list(cache = cache, rema_dir = rema_dir, rema_1km = rema_1km,
                 terrain_cache = terrain_cache, spatial = spatial, coastline_hr = coastline_hr,
                 coastline = coastline, iceshelves = iceshelves, rock = rock,
                 contours = contours, output = output, terra_tmp = terra_tmp)
   given <- given[!vapply(given, is.null, logical(1))]
-  stored <- getOption("landfall.paths", list())
-  setting <- length(given) > 0
+  stored <- if (reset) list() else getOption("landfall.paths", list())
+  setting <- reset || length(given) > 0
   if (setting) {
-    stored[names(given)] <- lapply(given, normalizePath, winslash = "/", mustWork = FALSE)
+    # NA clears a setting. Dropping every NULL above means an omitted argument
+    # cannot be told from one passed as NULL, so clearing needs its own value.
+    is_clear <- vapply(given, function(v) length(v) == 1 && is.na(v), logical(1))
+    stored[names(given)[is_clear]] <- NULL
+    keep <- names(given)[!is_clear]
+    stored[keep] <- lapply(given[keep], normalizePath, winslash = "/", mustWork = FALSE)
     options(landfall.paths = stored)
   }
   p <- stored

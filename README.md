@@ -74,7 +74,11 @@ on its own.
 
 Elevation comes from the REMA v2.0 32 m tiles of the Polar Geospatial Center,
 which `pack_sites()` fetches into `rema_dir` as a site needs them. Each tile
-covers a 100 km square and is 15 to 40 MB on disk.
+covers a 100 km square and is 15 to 40 MB on disk, but it arrives inside an
+archive of a few hundred megabytes, so budget for the download and not for what
+it leaves behind. The tile grid is arithmetic and the mosaic is not: an index
+that falls on open sea has no archive, and `pack_sites()` reports that
+separately from a transfer that failed.
 
 ## Before a trip
 
@@ -95,11 +99,12 @@ site_report("NEKO", count = 812, type = "nests", species = "GEPE",
 
 The figure has the relief map of 25 km around Neko Harbor on the left, with the
 other MAPPPD sites in the window marked, and on the right the gentoo nest counts
-of every earlier season from MAPPPD with the new count on them in orange, its
-accuracy class as an error bar. Under the panel, the comparison is written out:
-how many earlier seasons had more nests and how many fewer, the change from the
-last count and how long ago that was, and whether the new count falls within
-the range of the last ten seasons. The pieces are available on their own:
+of every earlier season from MAPPPD with the new count on them in orange, the
+range of its accuracy class as a bar. Under the panel, the comparison is
+written out: how many earlier seasons had more nests and how many fewer, the
+change from the highest recorded count of the most recent earlier season and
+how long ago that was, and whether the new count falls within the range of the
+ten most recent seasons that hold one. The pieces are available on their own:
 
 ```r
 site_map("NEKO", radius_km = 15)               # the map alone, at any radius
@@ -108,17 +113,45 @@ colony_record("NEKO")                          # every MAPPPD count at the site
 count_context(colony_record("NEKO"), new_count(812, "nests", "GEPE", season = 2026))
 ```
 
+A site given by name and coordinates is a point of your own and has no MAPPPD
+identity, so no count record is read for it and the comparison says so. Its
+`code` is a label for titles and file names, and a name whose first four
+letters match a real site does not pick up that site's counts. Say which
+MAPPPD site a point stands for when that is what you mean:
+
+```r
+site_point("Neko Harbor beach", lon = -62.53, lat = -64.84, mapppd_id = "NEKO")
+```
+
 ## How the comparison is made
 
 MAPPPD records nests, chicks and adults as separate count types, and a season
 often holds several counts of one type from different dates and observers. A
 new count is therefore compared only with counts of the same species and the
-same type, each season is represented by its peak count, which for nests is
-the count nearest the peak of incubation, and the new count's accuracy class
-sets its error bar: MAPPPD's classes 1 to 5 mean the true value is within 5%,
-10%, 15%, 25% or 50% of the count. A season is the austral summer named by the
-year in which it begins, so a count made in January 2027 belongs to season
-2026.
+same type, and each season is represented by its highest recorded count. That
+is the highest count anybody wrote down, so it is not selected by breeding
+stage, and matching the species and the type is all the comparison controls
+for. Two seasons may also differ in when in the cycle they were counted, how
+much of the colony each visit covered, and what method was used.
+
+A season's peak is a single observation, so the accuracy class, date, vantage
+and citation reported beside it are that same observation's and are never
+assembled from different counts.
+
+MAPPPD's accuracy field holds the five-point precision scale the counter
+assigned in the field (Croxall and Kirkwood 1979), and not an uncertainty
+worked out from the count, so a range built from it is not a confidence
+interval and says nothing about where the true population lies. The published
+bands are within 5% for class 1, 10% for class 2, 10 to 15% for class 3, 25 to
+50% for class 4, and the nearest order of magnitude for class 5 (Strycker et
+al. 2020, Table 2). `accuracy_bounds()` takes the wider end of each band, and
+reads class 5 as a factor of the square root of ten either side, which spans
+exactly one order of magnitude. A count with no class recorded gets no range
+and no bar, and `accuracy` has no default, because an omitted class is unknown
+and not the most precise one.
+
+A season is the austral summer named by the year in which it begins, so a count
+made in January 2027 belongs to season 2026.
 
 ## Style
 
@@ -133,9 +166,9 @@ palette.
 `landfall` shares its stack with the Antarctic Program's printed map series:
 REMA elevation under a four-direction hillshade, the ADD layers, `ggrepel` for
 the labels and `ggspatial` for the scale bar and the north arrow. Four faults
-were found in that series during November 2026 and three of them are present in
-this package. None is fixed here yet, and each is written out below so the fix
-is a decision and not a rediscovery.
+were found in that series during November 2026 and three of them were present
+in this package. Two are fixed here and the third is not. Each is written out
+below with what was done about it.
 
 ### REMA measures from the ellipsoid, not from the sea
 
@@ -163,6 +196,16 @@ above zero so that land REMA cannot height sits at the bottom of the ramp rather
 than vanishing. The measurement is cheap, because the window's own sea is
 already in the grid.
 
+**Fixed.** `build_site_terrain()` measures the sea surface from the window's own
+water, takes it off the model, shades a copy cut to a 60 m collar beyond the
+drawn land, and floors the land at 0.25 m. At Neko Harbor the separation
+measures 16.83 m, between the 15.05 m of the Lemaire Channel and the 18.24 m of
+the Gerlache Strait, which is where Andvord Bay should sit. The same pass
+separates two masks that had been one: water takes the ocean color, and land
+the coastline puts above the sea for which REMA holds no height takes a flat
+land tint and is counted and reported. At Neko Harbor that is 2,921 cells of
+439,558, which had been drawn as open water on ground.
+
 ### The relief cache is keyed on less than it is built from
 
 `window_stem()` names the cached relief from the site code, the radius and the
@@ -174,6 +217,16 @@ coastline version, the contour and sea-floor resolutions, the REMA tile set and
 the elevation datum, and settled on writing a signature of every setting beside
 the cached raster and rebuilding on a mismatch.
 
+**Fixed.** `terrain_signature()` writes the window's own coordinates, the
+projection, the grid, the exaggeration, the shadow floor, the collar, the
+elevation source and the coastline file with their sizes and timestamps, and
+the ramp and its breaks, into a file beside the raster. The cache is reused
+only on an exact match. This also closes a worse case than a stale style: two
+different places can share a cache file name, because the name carries only the
+site code, the radius and the meridian, and a point of your own labelled NEKO
+at the same radius writes where Neko Harbor wrote. `clear_terrain_cache()`
+removes them by site or all at once.
+
 ### The scale bar and the north arrow are invisible to the labels
 
 `map.R` draws site names through `ggrepel` and the bar and the arrow through
@@ -184,6 +237,12 @@ because an inset happened to be covering both. The repair is to hand the bar's
 and the arrow's footprints back to the layout as a grid of points carrying no
 label, spaced closer than the shortest label box is tall, because a name is
 pushed only by a point that falls inside its own box.
+
+**Still open here.** Nothing in this package hands the bar or the arrow to the
+label layout, so a site name can still be drawn across either. Neither has been
+seen to collide on the sites rendered so far, and the check that would settle
+it is to redraw the label layer on its own under the same seed and read every
+box back, which the map series already does.
 
 ### Measure the picture, not the settings
 

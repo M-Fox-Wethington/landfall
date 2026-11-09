@@ -11,7 +11,8 @@ save_figure(
   width = 16,
   height = 9,
   dpi = 300,
-  bg = "white"
+  bg = "white",
+  overwrite = FALSE
 )
 }
 \arguments{
@@ -26,11 +27,19 @@ save_figure(
 \item{dpi}{Resolution of the PNG.}
 
 \item{bg}{Background color.}
+
+\item{overwrite}{Write over files of the same name that already exist.}
 }
 \value{
 The two paths, invisibly, or \code{NULL} when nothing was written.
 }
 \description{
 Writes \code{name.png} through ragg at \code{dpi} and \code{name.pdf} through \code{cairo_pdf}
-into \code{out_dir}. The figure functions call this themselves.
+into \code{out_dir}. The figure functions call this themselves and return the
+paths it wrote.
+}
+\details{
+Existing files of the same name are left alone and an error says which they
+are, so one observation's report cannot quietly replace another's. Pass
+\code{overwrite = TRUE} when replacing them is what you want.
 }

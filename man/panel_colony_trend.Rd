@@ -32,7 +32,13 @@ A ggplot object.
 \description{
 Every MAPPPD count of the species at the site is drawn as a small point,
 with the chosen count type in slate and the other types in gray. A line
-joins the peak count of each season for the chosen type, and the new count,
-when given, sits on the series in orange with its accuracy range as an
-error bar.
+joins the highest recorded count of each season for the chosen type, and the
+new count, when given, sits on the series in orange with the range of its
+accuracy class as a bar. A count whose class was not recorded is drawn
+without a bar.
+}
+\details{
+Nests, chicks and adults are different quantities, so when more than one
+type is present the panel says so on its axis and separates the types by
+shape.
 }

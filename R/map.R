@@ -22,7 +22,7 @@ place_layers <- function(places, crs, size_pt = 9) {
   ggrepel::geom_text_repel(
     data = p, aes(label = .data$name, geometry = .data$geometry,
                   fontface = ifelse(.data$type == "water", "italic", "bold")),
-    stat = "sf_coordinates", size = pt(size_pt), color = MAP_TEXT,
+    stat = "sf_coordinates", size = pt_size(size_pt), color = MAP_TEXT,
     bg.color = alpha(MAP_PAPER, 0.85), bg.r = 0.12, seed = 42, max.overlaps = 12,
     min.segment.length = 0.3)
 }
@@ -35,7 +35,7 @@ neighbor_layers <- function(neighbors, size_pt = 8) {
     geom_sf(data = neighbors, color = COLORS$slate, size = 1.6, shape = 16),
     ggrepel::geom_text_repel(
       data = neighbors, aes(label = .data$name, geometry = .data$geometry),
-      stat = "sf_coordinates", size = pt(size_pt), color = COLORS$slate,
+      stat = "sf_coordinates", size = pt_size(size_pt), color = COLORS$slate,
       bg.color = alpha(MAP_PAPER, 0.85), bg.r = 0.1, seed = 42, max.overlaps = Inf,
       min.segment.length = 0.2, segment.color = alpha(COLORS$slate, 0.6),
       segment.size = 0.3)
@@ -97,7 +97,7 @@ site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels 
     geom_halo_points(site, color = SITE_COLOR, size = 3.8) +
     ggrepel::geom_label_repel(
       data = site, aes(label = .data$label, geometry = .data$geometry),
-      stat = "sf_coordinates", size = pt(text_pt + 1), fontface = "bold",
+      stat = "sf_coordinates", size = pt_size(text_pt + 1), fontface = "bold",
       color = COLORS$title, fill = alpha(MAP_PAPER, 0.92), label.size = 0.32,
       label.r = unit(0.10, "lines"), nudge_x = 0.18 * w$radius_km * 1000,
       nudge_y = -0.09 * w$radius_km * 1000, segment.color = COLORS$title,
@@ -144,8 +144,25 @@ map_caption <- function(L) {
     paste0(paste(head(layers, -1), collapse = ", "), " and ", tail(layers, 1))
   } else layers
   layers <- paste0(toupper(substr(layers, 1, 1)), substr(layers, 2, nchar(layers)))
-  sprintf("Relief: REMA v2.0 %s mosaic (Howat et al.), Polar Geospatial Center. %s: SCAR Antarctic Digital Database (%s).",
-          L$terrain$source, layers, L$coast$source)
+  if (!is.null(L$contours) && nrow(L$contours)) {
+    lv <- sort(unique(L$contours$level))
+    if (length(lv) > 1) {
+      layers <- sub("ontours", sprintf("ontours at %g m", min(diff(lv))), layers)
+    }
+  }
+  # Shaded relief is not a height scale, so the caption says what the heights
+  # are measured from. REMA reads from the WGS84 ellipsoid, and the relief
+  # takes off the sea surface measured in this window when there was enough
+  # water to measure one.
+  sea <- L$terrain$sea_level
+  datum <- if (is.null(sea) || is.na(sea) || sea == 0) {
+    "heights on the WGS84 ellipsoid"
+  } else {
+    sprintf("heights above the local sea surface, %.1f m on the WGS84 ellipsoid", sea)
+  }
+  sprintf(paste("Relief: REMA v2.0 %s mosaic (Howat et al.), Polar Geospatial Center,",
+                "%g m grid; %s. %s: SCAR Antarctic Digital Database (%s)."),
+          L$terrain$source, L$terrain$grid_res, datum, layers, L$coast$source)
 }
 
 #' Figure: the map of a site's surroundings

@@ -4,7 +4,7 @@
 \alias{site_point}
 \title{A site from a name and coordinates}
 \usage{
-site_point(name, lon, lat, code = NULL, region = NULL)
+site_point(name, lon, lat, code = NULL, mapppd_id = NULL, region = NULL)
 }
 \arguments{
 \item{name}{The site's name, used in titles.}
@@ -13,7 +13,11 @@ site_point(name, lon, lat, code = NULL, region = NULL)
 degrees.}
 
 \item{code}{An optional short code, used in file names and cache names.
-Defaults to the first four letters of the name in upper case.}
+Defaults to the first four letters of the name in upper case. It is a
+label only and is never used to look up counts.}
+
+\item{mapppd_id}{An optional MAPPPD site code this point stands for. It is
+checked against MAPPPD, and only then is that site's count record used.}
 
 \item{region}{An optional region name for the subtitle.}
 }
@@ -21,7 +25,10 @@ Defaults to the first four letters of the name in upper case.}
 A \code{landfall_site}.
 }
 \description{
-For a place that is not a MAPPPD site, or for a point of your own.
+For a place that is not a MAPPPD site, or for a point of your own. The point
+has no MAPPPD identity, so \code{\link[=colony_record]{colony_record()}} returns nothing for it and no
+count history is compared. Pass \code{mapppd_id} to say that the point stands for
+a particular MAPPPD site, and that site's record is then used.
 }
 \examples{
 site_point("Stonington Island", lon = -67.00, lat = -68.18)

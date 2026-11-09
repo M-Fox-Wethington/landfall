@@ -9,7 +9,8 @@ site_window(site, radius_km = 25, lon_0 = NULL, lat_ts = -71, pad_m = 5000)
 \arguments{
 \item{site}{A site, as \code{\link[=as_site]{as_site()}} accepts.}
 
-\item{radius_km}{Half-width of the frame in kilometers.}
+\item{radius_km}{Half-width of the frame in kilometers, so the frame is
+twice this across in projected coordinates.}
 
 \item{lon_0}{Central meridian of the projection. Defaults to the site's
 longitude.}
@@ -20,8 +21,9 @@ longitude.}
 }
 \value{
 An object of class \code{landfall_window}: a list with the \code{site},
-\code{radius_km}, \code{crs}, the site's \code{center} in projected meters, \code{xlim},
-\code{ylim}, \code{bbox}, the padded \code{bbox_3031} in EPSG:3031 and its WKT.
+\code{radius_km}, \code{lon_0}, \code{lat_ts}, \code{crs}, the site's \code{center} in projected
+meters, \code{xlim}, \code{ylim}, \code{bbox}, \code{pad_m}, the \code{padded} frame and the padded
+\code{bbox_3031} in EPSG:3031 with its WKT.
 }
 \description{
 A square frame of \code{radius_km} on each side of the site, in a polar

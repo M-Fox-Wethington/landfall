@@ -2,7 +2,7 @@
 % Please edit documentation in R/colony.R
 \name{season_peaks}
 \alias{season_peaks}
-\title{The peak count of each season}
+\title{The highest recorded count of each season}
 \usage{
 season_peaks(record, species, type)
 }
@@ -14,11 +14,21 @@ season_peaks(record, species, type)
 \item{type}{A count type.}
 }
 \value{
-A data frame with \code{season}, \code{peak}, \code{n_counts} (counts that
-season), \code{accuracy} (the best class among them), \code{lo} and \code{hi}.
+A data frame with \code{season}, \code{peak}, \code{n_counts} (how many counts that
+season held) and the chosen observation's \code{accuracy}, \code{date}, \code{vantage},
+\code{citekey}, \code{lo} and \code{hi}. Where two counts tie, the one with the better
+accuracy class wins, and where they tie on that too the earlier row of the
+record wins, so the choice is repeatable.
 }
 \description{
-For one species and count type, the highest count in each season, which
-for nests is the count nearest the peak of incubation and the best estimate
-of breeding pairs.
+For one species and count type, the highest count recorded in each season
+that holds one. A season's peak is a single observation, so the accuracy
+class, date, vantage and citation returned beside it are that same
+observation's and are never assembled from different counts.
+}
+\details{
+The peak is the highest count that was recorded. The package does not select
+observations by breeding stage, estimate missed nests, or check that two
+seasons covered the same ground, so the peak is not the count nearest the
+peak of incubation.
 }

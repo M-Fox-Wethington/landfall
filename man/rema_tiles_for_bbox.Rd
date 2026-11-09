@@ -14,7 +14,9 @@ A data frame with one row per tile: \code{row}, \code{col}, \code{name} (such as
 \code{"43_06"}), \code{file} (the tile's file name) and \code{url}.
 }
 \description{
-Which REMA 32 m tiles cover a box
+The indices come from the grid formula, so a tile the mosaic does not carry
+is listed here all the same. \code{\link[=rema_fetch_tiles]{rema_fetch_tiles()}} asks the Polar Geospatial
+Center which of them exist.
 }
 \examples{
 rema_tiles_for_bbox(sf::st_bbox(c(xmin = -2450000, ymin = 1150000,

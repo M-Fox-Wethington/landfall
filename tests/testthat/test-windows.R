@@ -10,6 +10,13 @@ test_that("a window is a square of the radius around the site", {
   expect_output(print(w), "25 km around")
 })
 
+test_that("a window records the latitude of true scale it was built on", {
+  # The cache signature needs it, because lon_0 and lat_ts together are what
+  # make the projection and neither is recoverable from the file name.
+  expect_equal(site_window("NEKO", radius_km = 25)$lat_ts, -71)
+  expect_equal(site_window("NEKO", radius_km = 25, lat_ts = -60)$lat_ts, -60)
+})
+
 test_that("the padded box in EPSG:3031 holds the frame", {
   w <- site_window("NEKO", radius_km = 10, pad_m = 2000)
   corners <- sf::st_as_sfc(w$bbox) |> sf::st_cast("POINT") |> sf::st_transform(3031) |>

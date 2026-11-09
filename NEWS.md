@@ -1,3 +1,98 @@
+# landfall (development version)
+
+A correctness pass over the count record, the site identity, the relief cache
+and the file names, following an independent review of 0.1.0. Five of these
+change what existing calls do, and each is listed as such.
+
+## Counts and precision
+
+* **Changed.** `accuracy` no longer defaults to class 1 in `new_count()` and
+  `site_report()`. Omitting it now means the class was not recorded, which
+  yields no range and no error bar. The old default gave an unqualified count
+  the most precise class on the scale.
+* **Changed.** `accuracy_bounds()` reads class 4 as 50% and class 5 as the
+  nearest order of magnitude, a factor of the square root of ten either side.
+  It had read them as 25% and 50%, which took the floor of the class 4 band
+  where classes 1 to 3 take the ceiling, and turned class 5 into a percentage
+  it does not have. The published bands are in Strycker et al. (2020, Table 2)
+  and the field is the observer's own precision note (Croxall and Kirkwood
+  1979), so the documentation no longer calls a derived range a statement about
+  the true population.
+* `season_peaks()` selects the observation that supplies a season's maximum and
+  returns that observation's accuracy class, date, vantage and citation. It had
+  taken the highest count and the best class independently, so a season holding
+  1,000 nests at class 1 and 1,100 at class 2 reported 1,100 at class 1 and a
+  range a third too narrow. Ties resolve by the better class and then by the
+  earlier row.
+* A change from a season whose count was zero reports the difference and says
+  the percentage is undefined. It had divided by zero. MAPPPD holds 125 season
+  peaks of zero across 63 sites, including the most recent gentoo nest count at
+  Dundee Island.
+* `new_count()` rejects a non-finite count and refuses a date and a season that
+  disagree.
+* The comparison no longer describes a count as the first in MAPPPD, since
+  later seasons may hold counts and nothing here is submitted to MAPPPD, and no
+  longer describes a season's maximum as the count nearest the peak of
+  incubation, which is not how it is chosen.
+
+## Sites
+
+* **Changed.** A site now carries `mapppd_id` beside `code`, and count records
+  are read by `mapppd_id` alone. `site_point()` leaves it empty, so a point of
+  your own has no count history. A point named "Neko Ridge" took the default
+  code `NEKO` and inherited Neko Harbor's record. Pass `mapppd_id` to say which
+  MAPPPD site a point stands for.
+* `sites_within()` drops the focal site by its MAPPPD identifier, so a point of
+  your own no longer removes the real site its label resembles.
+
+## Relief
+
+* The sea surface is measured from each window's own water and taken off the
+  model. REMA reads from the WGS84 ellipsoid, which stands 15 to 23 m below the
+  sea around the Peninsula, so every beach had been tinted that much too high
+  and the cut at zero never fired at the shore.
+* Land for which REMA holds no height is drawn as a flat land tint and the
+  share of it is reported. It had been painted as ocean, which invented open
+  water on ground the coastline puts above it.
+* The hillshade is computed on a copy cut to a collar beyond the drawn land, so
+  slopes still have neighbors at the shore, and land below the corrected sea
+  surface sits at the bottom of the ramp instead of vanishing.
+* The last color of the hypsometric ramp can now be drawn. `findInterval()` was
+  called with `all.inside = TRUE` against eight breaks and eight colors, which
+  confined the index to seven.
+* **Changed.** The cached relief is keyed on a signature of the window's
+  coordinates, the projection, the grid, the shading, the elevation and
+  coastline files and the ramp, and rebuilds when any of them differs. Caches
+  from 0.1.0 have no signature and rebuild once. The file name alone could
+  return an image built at another resolution, from another coastline, or for
+  another place that shares the name.
+* `clear_terrain_cache()` removes cached relief by site or all at once, and
+  `build_site_terrain(rebuild = TRUE)` forces one rebuild.
+
+## Files and sources
+
+* **Changed.** A report's default file name carries the site, the species, the
+  count type and the date, so two observations at one site in one season no
+  longer write to the same files. `save_figure()` refuses to replace an
+  existing file unless `overwrite = TRUE`, and `site_report()` returns the
+  paths it wrote in the `files` attribute.
+* The caption names the Antarctic Penguin Biogeography Project as the source of
+  the counts and the MAPPPD application separately, reports the installed
+  `mapppdr` version whole, states what the heights are measured from and gives
+  the contour interval. It had cut the version to two parts and cited only the
+  application.
+* `load_coast()` reads the coastline version from the file that was loaded. It
+  had written v7.10 into every caption whatever was on disk.
+* **Changed.** `landfall_paths()` clears a setting when it is passed `NA` and
+  clears every setting with `reset = TRUE`. A `NULL` could not be told from an
+  omitted argument, so a setting could only be replaced.
+* A vector layer is filtered in its own coordinate system. The filter had been
+  written in EPSG:3031 whatever the file held.
+* `rema_fetch_tiles()` checks whether the mosaic serves a tile before
+  downloading, returns a `status` for each one, and checks that the elevation
+  file was saved. It had marked a tile fetched without reading the result of
+  the copy, and treated a tile the mosaic does not carry as a failed transfer.
+
 # landfall 0.1.0
 
 First release.

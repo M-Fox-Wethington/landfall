@@ -30,9 +30,29 @@ test_that("the tiles on the BRI workstation match the formula", {
   }
 })
 
+test_that("a tile already on disk is reported as such and nothing is fetched", {
+  dir <- withr::local_tempdir()
+  box <- sf::st_bbox(c(xmin = -2450000, ymin = 1250000, xmax = -2440000, ymax = 1260000),
+                     crs = sf::st_crs(3031))
+  t <- rema_tiles_for_bbox(box)
+  file.create(file.path(dir, t$file))
+  out <- rema_fetch_tiles(t, dir, quiet = TRUE)
+  expect_equal(out$status, "on disk")
+  expect_false(any(out$fetched))
+})
+
 test_that("a missing tile stops when no fallback is set", {
   box <- sf::st_bbox(c(xmin = 100000, ymin = 100000, xmax = 110000, ymax = 110000),
                      crs = sf::st_crs(3031))
   paths <- list(rema_dir = withr::local_tempdir(), rema_1km = NULL)
   expect_error(landfall:::rema_dem_for(box, paths), "missing for this window")
+})
+
+test_that("the error for a missing tile mentions the mosaic's own gaps", {
+  # The tile grid is arithmetic and the mosaic is not, so a tile that was never
+  # published is a different problem from one that has not been downloaded.
+  box <- sf::st_bbox(c(xmin = 100000, ymin = 100000, xmax = 110000, ymax = 110000),
+                     crs = sf::st_crs(3031))
+  paths <- list(rema_dir = withr::local_tempdir(), rema_1km = NULL)
+  expect_error(landfall:::rema_dem_for(box, paths), "does not carry")
 })

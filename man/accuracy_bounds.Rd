@@ -9,15 +9,21 @@ accuracy_bounds(count, accuracy)
 \arguments{
 \item{count}{The count.}
 
-\item{accuracy}{The accuracy class, 1 to 5. \code{NA} gives an \code{NA} range.}
+\item{accuracy}{The accuracy class, 1 to 5, or \code{NA}.}
 }
 \value{
 A data frame with \code{lo} and \code{hi}.
 }
 \description{
-MAPPPD grades each count 1 to 5, meaning the true value is within 5\%, 10\%,
-15\%, 25\% or 50\% of the count.
+A class is the count precision the observer assigned in the field, so the
+range it implies restates that note and is not a confidence interval.
+Classes 1 to 4 give a symmetric range from the wider end of the published
+band. Class 5, the nearest order of magnitude, gives a multiplicative range
+of the square root of ten either side. An \code{NA} class gives an \code{NA} range,
+because a count with no class recorded has no stated precision.
 }
 \examples{
 accuracy_bounds(1000, 2)
+accuracy_bounds(1000, 1:5)
+accuracy_bounds(1000, NA)
 }

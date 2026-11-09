@@ -15,7 +15,9 @@ sites_within(site, radius_km, crs = 4326)
 }
 \value{
 An sf object of points with \code{code}, \code{name}, \code{n_counts} (the number
-of MAPPPD counts at the site) and \code{dist_km}, sorted by distance.
+of MAPPPD counts at the site) and \code{dist_km}, sorted by distance. The site
+itself is left out when it is a MAPPPD site; a point of your own leaves
+every MAPPPD site in, including one whose code resembles its label.
 }
 \description{
 Other MAPPPD sites within a radius

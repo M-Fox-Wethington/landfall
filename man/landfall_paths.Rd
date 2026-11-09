@@ -16,7 +16,8 @@ landfall_paths(
   rock = NULL,
   contours = NULL,
   output = NULL,
-  terra_tmp = NULL
+  terra_tmp = NULL,
+  reset = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ layers.}
 the default, the figure functions return their plots and write nothing.}
 
 \item{terra_tmp}{Folder for terra's temporary rasters.}
+
+\item{reset}{Clear every stored setting before applying the arguments.}
 }
 \value{
 The resolved list of paths, invisibly when any argument was given.
@@ -53,14 +56,19 @@ point at copies on disk before a map can be drawn, and \code{output} has to be s
 before a figure is written.
 }
 \details{
+An omitted argument leaves a setting as it is. Passing \code{NA} clears one, and
+\code{reset = TRUE} clears them all, so a setting made earlier in the session can
+be taken back rather than only replaced.
+
 The ADD layers default to this layout under \code{spatial}, which is the layout
 of the BRI priority-map bundle. Each can also be set on its own.
 \itemize{
 \item \code{coastline_hr}:
 \code{add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg}, the
-ADD v7.10 high-resolution coastline polygons, which hold land, ice shelf,
+ADD high-resolution coastline polygons, which hold land, ice shelf,
 ice tongue and rumple classes in one layer. The maps use it when it is on
-disk.
+disk. Point it at a newer release to use one; the caption reads the
+version from the file name.
 \item \code{coastline} and \code{iceshelves}:
 \code{Continent_ADD/Antarctica_Coastline_med_res_poly.shp} and
 \code{iceshelves/medium_res_IceShelfs.shp}, the medium-resolution layers, used
@@ -82,5 +90,7 @@ landfall_paths(
   output  = "D:/landfall/figures"
 )
 landfall_paths()$rema_dir
+landfall_paths(output = NA)   # stop writing figures
+landfall_paths(reset = TRUE)  # forget everything set this session
 }
 }

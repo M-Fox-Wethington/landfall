@@ -14,14 +14,16 @@ stere_crs <- function(lon_0, lat_ts = -71) {
 #' instead; pass `lon_0 = -60` to match them.
 #'
 #' @param site A site, as [as_site()] accepts.
-#' @param radius_km Half-width of the frame in kilometers.
+#' @param radius_km Half-width of the frame in kilometers, so the frame is
+#'   twice this across in projected coordinates.
 #' @param lon_0 Central meridian of the projection. Defaults to the site's
 #'   longitude.
 #' @param lat_ts Latitude of true scale.
 #' @param pad_m How far beyond the frame the layers are read, in meters.
 #' @return An object of class `landfall_window`: a list with the `site`,
-#'   `radius_km`, `crs`, the site's `center` in projected meters, `xlim`,
-#'   `ylim`, `bbox`, the padded `bbox_3031` in EPSG:3031 and its WKT.
+#'   `radius_km`, `lon_0`, `lat_ts`, `crs`, the site's `center` in projected
+#'   meters, `xlim`, `ylim`, `bbox`, `pad_m`, the `padded` frame and the padded
+#'   `bbox_3031` in EPSG:3031 with its WKT.
 #' @export
 site_window <- function(site, radius_km = 25, lon_0 = NULL, lat_ts = -71, pad_m = 5000) {
   site <- as_site(site)
@@ -36,8 +38,8 @@ site_window <- function(site, radius_km = 25, lon_0 = NULL, lat_ts = -71, pad_m 
                       crs = crs)
   padded <- sf::st_buffer(sf::st_as_sfc(bbox), pad_m)
   in_3031 <- sf::st_transform(padded, 3031)
-  structure(list(site = site, radius_km = radius_km, lon_0 = lon_0, crs = crs,
-                 center = c(x = ctr[1], y = ctr[2]), xlim = xlim, ylim = ylim,
+  structure(list(site = site, radius_km = radius_km, lon_0 = lon_0, lat_ts = lat_ts,
+                 crs = crs, center = c(x = ctr[1], y = ctr[2]), xlim = xlim, ylim = ylim,
                  bbox = bbox, pad_m = pad_m, padded = padded,
                  bbox_3031 = sf::st_bbox(in_3031),
                  wkt_3031 = sf::st_as_text(sf::st_geometry(in_3031))),
@@ -51,7 +53,11 @@ print.landfall_window <- function(x, ...) {
   invisible(x)
 }
 
-# Cache name stem for a window: neko_r25_lon-62.5.
+# A readable file name for a window's cached relief, such as neko_r25_lon-62.5.
+# It is a name and not a cache key: what decides whether a cached relief may be
+# reused is the signature written beside it by terrain_signature(), because a
+# name this short cannot carry the window's coordinates, the grid, the shading
+# or the versions of the layers the model was built from.
 window_stem <- function(window) {
   sprintf("%s_r%g_lon%g", tolower(window$site$code), window$radius_km,
           round(window$lon_0, 1))
