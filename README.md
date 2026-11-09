@@ -20,6 +20,26 @@ date = "2026-12-14", accuracy = 2)` with an example count. The map alone, from
 
 <img src="man/figures/neko_map_12km.jpg" width="60%" alt="The map of 12 km around Neko Harbor">
 
+## The printed map series
+
+The same stack draws the Antarctic Program's printed wall sheets, which are
+built with the `frazil` package and the program's own scripts and not with
+`landfall`. They are here because the two share their elevation, their coastline
+and their cartography, so a fault found in one is usually a fault in the other,
+and the section at the end of this page sets out what the series has found so
+far.
+
+![The Antarctic Sound and the northwest Weddell Sea](man/figures/antarctic_sound_sheet.jpg)
+
+The Antarctic Sound and the northwest Weddell Sea, 36 by 24 inches at 1:354,200,
+carrying 92 place names and 50 colonies keyed by number to a list. Below, the
+Danger Islands at 1:42,300, where seven islands holding 443 hectares between
+them carry 751,527 Adelie nests, and the Lemaire Channel and Penola Strait at
+1:62,500.
+
+<img src="man/figures/danger_islands_sheet.jpg" width="49%" alt="The Danger Islands">
+<img src="man/figures/lemaire_channel_sheet.jpg" width="31%" alt="The Lemaire Channel and Penola Strait">
+
 ## Installation
 
 ```r
