@@ -69,6 +69,36 @@ change what existing calls do, and each is listed as such.
 * `clear_terrain_cache()` removes cached relief by site or all at once, and
   `build_site_terrain(rebuild = TRUE)` forces one rebuild.
 
+## The label layout
+
+* The scale bar and the north arrow are handed to the label layout as points
+  that carry no label, so a name is no longer drawn across either. ggspatial
+  places both from the panel's own corners and ggrepel lays out names in the
+  map's coordinates, and neither knew about the other. The footprints were
+  measured by drawing the map twice, once with the annotations and once
+  without, and reading the bounding box of every pixel that changed.
+* `map_panel_inches()` measures the drawn panel, which is what turns a corner
+  given in centimeters into ground meters. `site_map()` and `site_report()`
+  each measure their own, because the map fills the figure in one and sits in
+  a slot of it in the other.
+* **Changed.** Place names and the names of the other MAPPPD sites are laid
+  out in one pass. A ggrepel layer cannot see the labels of any other, so as
+  two layers the sets had nothing stopping them landing on each other. The one
+  visible consequence is that a place name's leader is now the same faint
+  slate as a site name's.
+* **Changed.** The names are repelled with `point.padding` of 0.06 inches, a
+  force of 4 and a pull of 0.8, where all three were ggrepel's defaults. The
+  default padding is a millionth of a line, which is small enough that a
+  barrier point moves nothing at all, and the eased pull lets a name whose own
+  position falls under the bar leave it and draw a leader back.
+* The site and neighbor markers are barriers too, as filled discs rather than
+  rings, because a label well inside a ring touches nothing.
+* `check_map_labels()` draws a map on a throwaway device and reads every label
+  back out of it, reporting boxes that meet and labels sitting on a barrier
+  point. The second is the only way to catch a name on the bar, the arrow or a
+  marker, because none of those reaches the layout as a box of its own.
+* `site_map()` gained `overwrite`, to match `site_report()`.
+
 ## Files and sources
 
 * **Changed.** A report's default file name carries the site, the species, the

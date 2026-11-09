@@ -13,6 +13,7 @@ site_map(
   title = NULL,
   out_dir = landfall_paths()$output,
   name = NULL,
+  overwrite = FALSE,
   width = 12,
   height = 12,
   dpi = 300,
@@ -38,6 +39,8 @@ own.}
 \item{out_dir}{Folder to write into, or \code{NULL} to write nothing.}
 
 \item{name}{File name stem.}
+
+\item{overwrite}{Write over files of the same name that already exist.}
 
 \item{width, height}{Size in inches.}
 

@@ -93,7 +93,14 @@ site_report <- function(site, count, type = c("nests", "chicks", "adults"), spec
 
   w <- site_window(site, radius_km, lon_0 = lon_0)
   L <- site_map_layers(w, paths)
-  map <- site_map_plot(L, places = places, label_sites = label_sites, text_pt = 8.5)
+  # The map is drawn into a slot of the figure rather than filling it, so its
+  # panel is that slot less the map's own margins and edge labels. The size is
+  # measured here, because the reservation that keeps the names off the scale
+  # bar and the north arrow is in inches of drawn panel.
+  map_h <- 0.78
+  map_w <- map_h * height / width
+  map <- site_map_plot(L, places = places, label_sites = label_sites, text_pt = 8.5,
+                       panel_in = map_panel_inches(w, map_w * width, map_h * height))
 
   # Other species get a panel when the site holds a nest or chick count of
   # them, or counts from more than one season; a single count of adults, such
@@ -137,8 +144,6 @@ site_report <- function(site, count, type = c("nests", "chicks", "adults"), spec
     "each season, and ", precision, ". Map: ", radius_km, " km around the site. ",
     map_caption(L)), width = 250), collapse = "\n")
 
-  map_h <- 0.78
-  map_w <- map_h * height / width
   right_x <- 0.05 + map_w + 0.03
   right_w <- 0.97 - right_x
   n_other <- length(other_panels)

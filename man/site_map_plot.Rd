@@ -10,7 +10,8 @@ site_map_plot(
   label_sites = TRUE,
   max_site_labels = 12,
   text_pt = 9,
-  contours = TRUE
+  contours = TRUE,
+  panel_in = NULL
 )
 }
 \arguments{
@@ -26,13 +27,25 @@ site_map_plot(
 \item{text_pt}{Size of the place labels in points.}
 
 \item{contours}{Draw the contours.}
+
+\item{panel_in}{The drawn panel's width and height in inches, from
+\code{\link[=map_panel_inches]{map_panel_inches()}}, or \code{NULL} to reserve nothing.}
 }
 \value{
-A ggplot object.
+A ggplot object, with the attributes \code{window}, \code{panel_in} and
+\code{barrier}, which \code{\link[=check_map_labels]{check_map_labels()}} reads.
 }
 \description{
 The layer stack of the BRI neighborhood maps: ocean, relief, ice shelves,
 contours, rock outcrops, coastline, the other MAPPPD sites in the window,
 place names, and the site marker with its label, then the graticule, a
 scale bar and a north arrow.
+}
+\details{
+The scale bar and the north arrow are drawn from the panel's own corners and
+the names are laid out in the map's own coordinates, so neither knows about
+the other. Give \code{panel_in} and both are handed to the layout as points that
+carry no label, which keeps the names off them; see \code{\link[=map_panel_inches]{map_panel_inches()}} for
+how to measure it. Leave it out and the names are laid out as they were
+before, with nothing stopping one crossing the bar.
 }

@@ -167,8 +167,8 @@ palette.
 REMA elevation under a four-direction hillshade, the ADD layers, `ggrepel` for
 the labels and `ggspatial` for the scale bar and the north arrow. Four faults
 were found in that series during November 2026 and three of them were present
-in this package. Two are fixed here and the third is not. Each is written out
-below with what was done about it.
+in this package. All three are fixed here. Each is written out below with what
+was done about it.
 
 ### REMA measures from the ellipsoid, not from the sea
 
@@ -238,11 +238,26 @@ and the arrow's footprints back to the layout as a grid of points carrying no
 label, spaced closer than the shortest label box is tall, because a name is
 pushed only by a point that falls inside its own box.
 
-**Still open here.** Nothing in this package hands the bar or the arrow to the
-label layout, so a site name can still be drawn across either. Neither has been
-seen to collide on the sites rendered so far, and the check that would settle
-it is to redraw the label layer on its own under the same seed and read every
-box back, which the map series already does.
+**Fixed.** The bar's and the arrow's footprints were measured by drawing the
+map twice, once with the two annotations and once without, and reading the
+bounding box of every pixel that changed. Each rectangle, plus a margin, is now
+laid down as a lattice of points that carry no label and so draw nothing, and
+`check_map_labels()` reads every label back out of the finished drawing and
+reports any that still meets another or sits on one of those points.
+
+Turning a corner measured in centimeters into ground meters needs the drawn
+panel's size, which is the figure less its margins, its title, its caption and
+its edge labels. `map_panel_inches()` measures it by drawing a plot that
+carries the same frame and text but no data layers; the skeleton and the full
+map gave the same panel to five decimal places at three figure sizes.
+
+Two things had to change before any of it moved a name. ggrepel pushes a label
+away from a point only within `point.padding` of it, and the default is a
+millionth of a line, so the first barrier was laid down correctly and did
+nothing. And `max.overlaps` counts every barrier point, so a ceiling there
+drops the very names the barrier is meant to move. On a test map with a place
+name planted in the middle of each corner, both names sat on the furniture
+before the repair and neither did after.
 
 ### Measure the picture, not the settings
 
