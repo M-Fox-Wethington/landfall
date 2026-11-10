@@ -58,3 +58,27 @@ test_that("a default names a path to look at even when no candidate is on disk",
   expect_match(landfall_paths()$bathymetry, "IBCSO", fixed = TRUE)
   expect_false(landfall:::has_path(landfall_paths(), "rock"))
 })
+
+test_that("a layer that exists but will not open does not count as readable", {
+  # The question check_offline() has to answer is whether a layer opens, not
+  # whether a file is there. A cloud-storage placeholder is both.
+  f <- withr::local_tempfile(fileext = ".gpkg")
+  writeLines("not a GeoPackage", f)
+  expect_true(file.exists(f))
+  expect_true(landfall:::has_path(list(contours = f), "contours"))
+  expect_false(landfall:::layer_readable(f))
+
+  r <- withr::local_tempfile(fileext = ".nc")
+  writeLines("not a NetCDF", r)
+  expect_false(landfall:::layer_readable(r))
+
+  expect_false(landfall:::layer_readable(NULL))
+  expect_false(landfall:::layer_readable(NA_character_))
+  expect_false(landfall:::layer_readable("no_such_file.gpkg"))
+
+  # A real one opens.
+  good <- withr::local_tempfile(fileext = ".gpkg")
+  sf::st_write(sf::st_sf(a = 1, geom = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4326)),
+               good, layer = "x", quiet = TRUE)
+  expect_true(landfall:::layer_readable(good))
+})

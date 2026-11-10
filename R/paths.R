@@ -140,3 +140,18 @@ require_path <- function(paths, field, what) {
 has_path <- function(paths, field) {
   !is.null(paths[[field]]) && file.exists(paths[[field]])
 }
+
+# TRUE when the layer at a path can actually be opened, which is a different
+# question from whether a file sits there. On a machine whose folders sync to
+# cloud storage, a layer that has been turned back into a placeholder exists,
+# reports its full size, and throws when anything asks for its bytes. A trip
+# depends on the second answer, so that is the one check_offline() gives.
+# Only the header is read, so the size of the file does not matter.
+layer_readable <- function(path) {
+  if (is.null(path) || length(path) != 1 || is.na(path) || !file.exists(path)) return(FALSE)
+  raster <- grepl("[.](tif|tiff|nc|vrt)$", path, ignore.case = TRUE)
+  tryCatch({
+    suppressWarnings(if (raster) terra::rast(path) else sf::st_layers(path))
+    TRUE
+  }, error = function(e) FALSE)
+}

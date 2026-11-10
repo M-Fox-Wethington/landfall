@@ -179,6 +179,14 @@ change what existing calls do, and each is listed as such.
   placeholder.
 * `landfall_paths()` gained `bathymetry`, which defaults to
   `ibcso_v2/IBCSO_v2_bed.nc` under `spatial`.
+* **Changed.** `check_offline()` reports whether each layer can be opened,
+  not whether a file sits at the path, and covers the bed model as well. The
+  two answers differ on exactly the layer that matters: a placeholder left by
+  cloud storage exists, reports its full size and throws when anything reads
+  it, so the check said a layer was packed for a trip that could not be drawn.
+  Only each layer's header is read, whatever the file's size. `pack_sites()`
+  raises the same test on the coastline and says which of the optional layers
+  cannot be read.
 * `rema_fetch_tiles()` checks whether the mosaic serves a tile before
   downloading, returns a `status` for each one, and checks that the elevation
   file was saved. It had marked a tile fetched without reading the result of
