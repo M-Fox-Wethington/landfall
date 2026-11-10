@@ -6,9 +6,16 @@
 #'   accepts.
 #' @param radius_km Half-width of the maps in kilometers.
 #' @param paths The list from [landfall_paths()].
+#' @details
+#' The `layers` attribute says which layers can be opened, which is not the
+#' same as which files are there. A layer that cloud storage has turned back
+#' into a placeholder exists and reports its full size, and throws when
+#' anything reads it, so it counts as missing here. Only each layer's header
+#' is read, whatever the file's size.
+#'
 #' @return A data frame with one row per site and REMA tile: `code`, `name`,
 #'   `tile`, `on_disk`, plus the attribute `layers`, a named logical vector
-#'   saying which ADD layers are on disk.
+#'   saying which of the other layers can be opened.
 #' @examples
 #' \dontrun{
 #' check_offline(c("NEKO", "CUVE", "DANC"), radius_km = 25)
@@ -24,11 +31,9 @@ check_offline <- function(sites, radius_km = 25, paths = landfall_paths()) {
                stringsAsFactors = FALSE)
   })
   out <- do.call(rbind, rows)
-  layers <- c(coastline_hr = has_path(paths, "coastline_hr"),
-              coastline = has_path(paths, "coastline"),
-              iceshelves = has_path(paths, "iceshelves"),
-              contours = has_path(paths, "contours"), rock = has_path(paths, "rock"),
-              rema_1km = has_path(paths, "rema_1km"))
+  fields <- c("coastline_hr", "coastline", "iceshelves", "contours", "rock",
+              "bathymetry", "rema_1km")
+  layers <- vapply(fields, function(f) layer_readable(paths[[f]]), logical(1))
   structure(out, layers = layers)
 }
 
@@ -54,9 +59,17 @@ pack_sites <- function(sites, radius_km = 25, build_terrain = TRUE, quiet = FALS
   need <- check_offline(sites, radius_km, paths)
   layers <- attr(need, "layers")
   if (!layers[["coastline_hr"]] && !(layers[["coastline"]] && layers[["iceshelves"]])) {
-    stop("No coastline on disk. Set landfall_paths(coastline_hr = ) to the ADD high-resolution ",
-         "coastline GeoPackage, or coastline and iceshelves to the medium-resolution layers.",
-         call. = FALSE)
+    stop("No coastline that can be read. Set landfall_paths(coastline_hr = ) to the ADD ",
+         "high-resolution coastline GeoPackage, or coastline and iceshelves to the ",
+         "medium-resolution layers. A file that is there but will not open counts as ",
+         "missing here.", call. = FALSE)
+  }
+  # The rest of the layers are ones a map can do without, so they are said
+  # out loud and not raised. Before a trip is when this is worth knowing.
+  spare <- layers[c("contours", "rock", "bathymetry")]
+  if (!quiet && any(!spare)) {
+    message("Cannot be read, so the maps will be drawn without: ",
+            paste(names(spare)[!spare], collapse = ", "), ".")
   }
   missing <- unique(need$tile[!need$on_disk])
   if (length(missing)) {

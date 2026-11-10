@@ -13,7 +13,8 @@ load_coast(window, paths = landfall_paths())
 }
 \value{
 A list with \code{land} and \code{shelves}, both sf objects in the window's
-CRS, and \code{source}, which names the coastline layer used.
+CRS, \code{source}, which names the coastline layer and the version read from
+its file name, and \code{files}, the paths that were read.
 }
 \description{
 Reads the ADD coastline within the window. With the high-resolution

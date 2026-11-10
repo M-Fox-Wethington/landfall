@@ -109,14 +109,27 @@ ROCK_FILL     <- "#806b5a"
 ROCK_BORDER   <- "#594536"
 SITE_COLOR    <- COLORS$orange
 
+# Land the coastline says is there but REMA holds no height for. It is drawn
+# as a flat land tint, because painting it as water would invent open sea on
+# ground the coastline puts above it.
+MAP_LAND_BARE <- COLORS$land
+
 # The hypsometric ice ramp of the neighborhood maps: eight steps from near
 # white at sea level to a deep gray-blue above 2400 m.
 HYPSO_PALETTE <- c("#f4f8fb", "#e3edf3", "#cfdde7", "#bdcedc",
                    "#a9bdcc", "#94aabb", "#7d97a9", "#677e8e")
 HYPSO_BREAKS  <- c(0, 200, 400, 600, 800, 1200, 1800, 2400)
 
-# geom_text() size from a size in points.
-pt <- function(x) x / ggplot2::.pt
+# The sea-floor ramp, pale in the shallows and deepening offshore, in the
+# depth colors of the BRI wall sheets. Like the land ramp it is stretched to
+# the window, and the square root of the depth puts more of the ramp in the
+# shallows, which is the water a landing party is in.
+BATHY_PALETTE <- c("#c6d6e0", "#b5c9d5", "#a7becd", "#99b3c5", "#88a5bb")
+
+# geom_text() size from a size in points. It is called pt_size and not pt
+# because pt is the t distribution in the stats package, and a one-letter
+# shadow of a base function is a trap this project has already paid for.
+pt_size <- function(x) x / ggplot2::.pt
 
 # Species labels for the colony panels.
 species_label <- function(species_id) {

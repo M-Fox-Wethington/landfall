@@ -17,7 +17,11 @@ A data frame with \code{site_id}, \code{species_id}, \code{species}, \code{seaso
 species, season and type. Presence-only rows with no count are left out.
 }
 \description{
-The MAPPPD count record of a site
+Records are retrieved by the site's validated MAPPPD identifier, which only
+a site from \code{\link[=site_lookup]{site_lookup()}}, or a \code{\link[=site_point]{site_point()}} given an explicit
+\code{mapppd_id}, carries. A point of your own has no MAPPPD identity and returns
+an empty record, so it can never inherit the history of a site whose code it
+happens to resemble.
 }
 \examples{
 head(colony_record("NEKO"))

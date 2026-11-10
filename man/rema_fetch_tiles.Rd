@@ -14,10 +14,13 @@ rema_fetch_tiles(tiles, rema_dir = landfall_paths()$rema_dir, quiet = FALSE)
 \item{quiet}{Suppress progress messages.}
 }
 \value{
-The table with a \code{fetched} column, invisibly.
+The table with \code{fetched}, a logical, and \code{status}, one of
+\code{"on disk"}, \code{"fetched"}, \code{"absent from the mosaic"}, \code{"download failed"},
+\code{"no elevation file in the archive"} or \code{"could not be saved"}, invisibly.
 }
 \description{
-Downloads each missing tile's archive from the Polar Geospatial Center,
-extracts the elevation file alone and discards the rest. An archive is a
-few hundred megabytes; the elevation file it yields is 15 to 40 MB.
+Asks the Polar Geospatial Center whether each missing tile exists, downloads
+the ones that do, extracts the elevation file alone and discards the rest.
+An archive is a few hundred megabytes to download; the elevation file it
+yields is 15 to 40 MB on disk.
 }

@@ -11,15 +11,17 @@ site_report(
   species = NULL,
   date = NULL,
   season = NULL,
-  accuracy = 1,
+  accuracy = NA,
   source = NULL,
   radius_km = 25,
   lon_0 = NULL,
   places = NULL,
   label_sites = TRUE,
+  arrow = c("blade", "sastrugi", "dart"),
   title = NULL,
   out_dir = landfall_paths()$output,
   name = NULL,
+  overwrite = FALSE,
   width = 16,
   height = 9,
   dpi = 300,
@@ -28,20 +30,24 @@ site_report(
 }
 \arguments{
 \item{site}{A site, as \code{\link[=as_site]{as_site()}} accepts: a four-letter MAPPPD code, or
-the result of \code{\link[=site_lookup]{site_lookup()}} or \code{\link[=site_point]{site_point()}}.}
+the result of \code{\link[=site_lookup]{site_lookup()}} or \code{\link[=site_point]{site_point()}}. A point of your own has
+no MAPPPD identity, so no count record is read for it and the comparison
+says so.}
 
 \item{count}{The new count, a whole number.}
 
 \item{type}{\code{"nests"}, \code{"chicks"} or \code{"adults"}.}
 
 \item{species}{A MAPPPD species code, or \code{NULL} when the site has counts
-of only one species.}
+of only one species. Case does not matter.}
 
 \item{date}{The date of the count, or \code{NULL} when only the season is known.}
 
 \item{season}{The season, or \code{NULL} to take it from \code{date}.}
 
-\item{accuracy}{MAPPPD accuracy class of the count, 1 to 5.}
+\item{accuracy}{MAPPPD accuracy class of the count, 1 to 5, or \code{NA} when
+none was recorded. There is no default, because an omitted class is
+unknown and not the most precise one.}
 
 \item{source}{A short note on who made the count, for the caption.}
 
@@ -54,11 +60,17 @@ site's own.}
 
 \item{label_sites}{Mark the other MAPPPD sites within the map.}
 
+\item{arrow}{The north arrow glyph, \code{"blade"}, \code{"sastrugi"} or \code{"dart"}; see
+\code{\link[=north_arrow_circle]{north_arrow_circle()}}.}
+
 \item{title}{Figure title, or \code{NULL} for the site's name.}
 
 \item{out_dir}{Folder to write into, or \code{NULL} to write nothing.}
 
-\item{name}{File name stem.}
+\item{name}{File name stem. The default identifies the site, the species,
+the count type and the date, so one observation cannot overwrite another.}
+
+\item{overwrite}{Write over files of the same name that already exist.}
 
 \item{width, height}{Size in inches.}
 
@@ -68,7 +80,8 @@ site's own.}
 }
 \value{
 The cowplot object, invisibly, with attributes \code{context} (the list
-from \code{\link[=count_context]{count_context()}}), \code{record}, \code{count} and \code{layers}.
+from \code{\link[=count_context]{count_context()}}), \code{record}, \code{count}, \code{map_layers} and \code{files}, the
+paths written.
 }
 \description{
 One call for a site code and a count. The figure holds the relief map of

@@ -15,8 +15,10 @@ landfall_paths(
   iceshelves = NULL,
   rock = NULL,
   contours = NULL,
+  bathymetry = NULL,
   output = NULL,
-  terra_tmp = NULL
+  terra_tmp = NULL,
+  reset = FALSE
 )
 }
 \arguments{
@@ -36,10 +38,14 @@ package's cache folder from \code{\link[tools:userdir]{tools::R_user_dir()}}.}
 \item{coastline_hr, coastline, iceshelves, rock, contours}{Paths to the ADD
 layers.}
 
+\item{bathymetry}{Path to a bed or bathymetry model, or \code{NULL}.}
+
 \item{output}{Folder the figure functions write to. While it is \code{NULL},
 the default, the figure functions return their plots and write nothing.}
 
 \item{terra_tmp}{Folder for terra's temporary rasters.}
+
+\item{reset}{Clear every stored setting before applying the arguments.}
 }
 \value{
 The resolved list of paths, invisibly when any argument was given.
@@ -53,21 +59,33 @@ point at copies on disk before a map can be drawn, and \code{output} has to be s
 before a figure is written.
 }
 \details{
+An omitted argument leaves a setting as it is. Passing \code{NA} clears one, and
+\code{reset = TRUE} clears them all, so a setting made earlier in the session can
+be taken back rather than only replaced.
+
 The ADD layers default to this layout under \code{spatial}, which is the layout
 of the BRI priority-map bundle. Each can also be set on its own.
 \itemize{
 \item \code{coastline_hr}:
 \code{add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg}, the
-ADD v7.10 high-resolution coastline polygons, which hold land, ice shelf,
+ADD high-resolution coastline polygons, which hold land, ice shelf,
 ice tongue and rumple classes in one layer. The maps use it when it is on
-disk.
+disk. Point it at a newer release to use one; the caption reads the
+version from the file name.
 \item \code{coastline} and \code{iceshelves}:
 \code{Continent_ADD/Antarctica_Coastline_med_res_poly.shp} and
 \code{iceshelves/medium_res_IceShelfs.shp}, the medium-resolution layers, used
 when the high-resolution file is absent.
-\item \code{rock}: \code{add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp}.
+\item \code{rock}: the high-resolution rock outcrop polygons, from \verb{add_v7_11/} or
+from \verb{add_rock_outcrop/}.
 \item \code{contours}: \code{add_contours/add_contours_medium_res_v7.3.gpkg}.
+\item \code{bathymetry}: \code{ibcso_v2/IBCSO_v2_bed.nc}, the IBCSO v2 bed model, which
+is not an ADD layer. The sea floor is tinted from it when it is on disk.
 }
+
+Each of those has more than one name across the ADD releases, so the
+default is the first of a short list of candidates that is on disk. Set
+the path by hand to pin a release.
 
 Elevation comes from the REMA v2.0 32 m tiles of the Polar Geospatial
 Center, kept as \verb{\{row\}_\{col\}_32m_v2.0_dem.tif} in \code{rema_dir};
@@ -82,5 +100,7 @@ landfall_paths(
   output  = "D:/landfall/figures"
 )
 landfall_paths()$rema_dir
+landfall_paths(output = NA)   # stop writing figures
+landfall_paths(reset = TRUE)  # forget everything set this session
 }
 }

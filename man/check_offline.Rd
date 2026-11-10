@@ -17,10 +17,17 @@ accepts.}
 \value{
 A data frame with one row per site and REMA tile: \code{code}, \code{name},
 \code{tile}, \code{on_disk}, plus the attribute \code{layers}, a named logical vector
-saying which ADD layers are on disk.
+saying which of the other layers can be opened.
 }
 \description{
 What a list of sites needs, and whether it is on disk
+}
+\details{
+The \code{layers} attribute says which layers can be opened, which is not the
+same as which files are there. A layer that cloud storage has turned back
+into a placeholder exists and reports its full size, and throws when
+anything reads it, so it counts as missing here. Only each layer's header
+is read, whatever the file's size.
 }
 \examples{
 \dontrun{

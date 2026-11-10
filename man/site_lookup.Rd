@@ -10,8 +10,8 @@ site_lookup(code)
 \item{code}{A four-letter MAPPPD site code. Case does not matter.}
 }
 \value{
-A \code{landfall_site}: a list with \code{code}, \code{name}, \code{region}, \code{lon},
-\code{lat} and \code{source}.
+A \code{landfall_site}: a list with \code{code}, \code{mapppd_id}, \code{name},
+\code{region}, \code{lon}, \code{lat} and \code{source}.
 }
 \description{
 MAPPPD gives every penguin colony site a four-letter code, such as \code{NEKO}

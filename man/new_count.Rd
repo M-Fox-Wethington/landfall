@@ -10,7 +10,7 @@ new_count(
   species,
   date = NULL,
   season = NULL,
-  accuracy = 1,
+  accuracy = NA,
   source = NULL
 )
 }
@@ -24,19 +24,22 @@ new_count(
 
 \item{date}{The date of the count, or \code{NULL} when only the season is known.}
 
-\item{season}{The season, or \code{NULL} to take it from \code{date}.}
+\item{season}{The season, or \code{NULL} to take it from \code{date}. Giving a date
+and a season that disagree is an error.}
 
-\item{accuracy}{MAPPPD accuracy class, 1 to 5.}
+\item{accuracy}{MAPPPD accuracy class, 1 to 5, or \code{NA} when the observer
+recorded none. There is no default, because an omitted class is unknown
+and not the most precise one.}
 
 \item{source}{A short note on who made the count, for the caption.}
 }
 \value{
 A \code{landfall_count}: a list with the arguments, the season, and the
-count range from \code{\link[=accuracy_bounds]{accuracy_bounds()}}.
+count range from \code{\link[=accuracy_bounds]{accuracy_bounds()}}, which is \code{NA} for an \code{NA} class.
 }
 \description{
 Checks and packages a count to add to a site's record.
 }
 \examples{
-new_count(812, "nests", "GEPE", date = "2026-12-14")
+new_count(812, "nests", "GEPE", date = "2026-12-14", accuracy = 2)
 }
