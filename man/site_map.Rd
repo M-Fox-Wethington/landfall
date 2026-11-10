@@ -10,7 +10,7 @@ site_map(
   lon_0 = NULL,
   places = NULL,
   label_sites = TRUE,
-  arrow = c("dart", "delta"),
+  arrow = c("blade", "sastrugi", "dart"),
   title = NULL,
   out_dir = landfall_paths()$output,
   name = NULL,
@@ -35,7 +35,7 @@ own.}
 
 \item{label_sites}{Mark the other MAPPPD sites within the window.}
 
-\item{arrow}{The north arrow glyph, \code{"dart"} or \code{"delta"}; see
+\item{arrow}{The north arrow glyph, \code{"blade"}, \code{"sastrugi"} or \code{"dart"}; see
 \code{\link[=north_arrow_circle]{north_arrow_circle()}}.}
 
 \item{title}{Figure title, or \code{NULL} for the site's name and the radius.}

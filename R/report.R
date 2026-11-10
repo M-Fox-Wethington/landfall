@@ -45,7 +45,7 @@ mapppd_version <- function() {
 #'   site's own.
 #' @param places A data frame of place names for the map, or `NULL`.
 #' @param label_sites Mark the other MAPPPD sites within the map.
-#' @param arrow The north arrow glyph, `"dart"` or `"delta"`; see
+#' @param arrow The north arrow glyph, `"blade"`, `"sastrugi"` or `"dart"`; see
 #'   [north_arrow_circle()].
 #' @param title Figure title, or `NULL` for the site's name.
 #' @param out_dir Folder to write into, or `NULL` to write nothing.
@@ -67,7 +67,7 @@ mapppd_version <- function() {
 site_report <- function(site, count, type = c("nests", "chicks", "adults"), species = NULL,
                         date = NULL, season = NULL, accuracy = NA, source = NULL,
                         radius_km = 25, lon_0 = NULL, places = NULL, label_sites = TRUE,
-                        arrow = c("dart", "delta"),
+                        arrow = c("blade", "sastrugi", "dart"),
                         title = NULL, out_dir = landfall_paths()$output, name = NULL,
                         overwrite = FALSE, width = 16, height = 9, dpi = 300,
                         paths = landfall_paths()) {

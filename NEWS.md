@@ -116,14 +116,23 @@ change what existing calls do, and each is listed as such.
   relief. This is the treatment the Antarctic Sound sheet uses.
 * **Changed.** The north arrow is a glyph inside a ring with the letter above
   it, on a backing in the paper color, in place of ggspatial's bare line and
-  triangle. `north_arrow_circle()` draws a plain arrowhead or a swept delta
-  and takes ggspatial's own style arguments, so it can be used in any map;
-  `site_map(arrow = "delta")` and `site_report(arrow = "delta")` pick the
-  second. The delta is asymmetric, a good deal taller than it is wide, with a
-  long left edge sweeping to a tip at the very bottom and a shorter right one;
-  its four corners and the curves between them were fitted to a shape
-  measured off a drawing rather than drawn from memory, which produced a
-  chevron four times running.
+  triangle. `north_arrow_circle()` takes ggspatial's own style arguments, so
+  it can be used in any map, and `site_map()` and `site_report()` take the
+  glyph by name through `arrow`.
+* **Changed.** The glyph is `"blade"` by default, a five-cornered sail with a
+  hollow luff and a broken leech, drawn with straight edges, so site maps now
+  draw that where they drew the plain arrowhead. `arrow = "dart"` restores the
+  old look and `arrow = "sastrugi"` gives the curved alternative, a
+  wind-carved snow ridge with a sharp crest over a long leeward drift. Each
+  glyph is scaled so its furthest point from the ring's center reaches the
+  same radius, rather than to its own height, so all three sit inside the ring
+  with identical clearance.
+* **Removed.** The swept delta is gone and asking for it by name is an error
+  rather than a silent substitution. It was the Star Trek Starfleet insignia,
+  a registered Paramount trademark, and it was retired for that reason and not
+  on taste. Every variant tried on the way to the replacements is in the
+  design-library repository under `cartography/symbols/north-arrows`, that one
+  included, as SVG with its own measurements.
 * **Changed.** The sea floor is tinted by depth from the IBCSO v2 bed model
   when `landfall_paths()$bathymetry` points at one, and keeps the flat ocean
   color when it does not, so a window with no soundings in it looks like one.

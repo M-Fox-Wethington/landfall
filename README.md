@@ -158,7 +158,9 @@ The maps follow the BRI neighborhood maps: REMA elevation under a
 four-direction Imhof hillshade, a hypsometric ice ramp, the sea floor tinted
 from IBCSO, the ADD coastline, ice shelves, contours and rock outcrops, and a
 parchment page. The charts use the BRI figure style. The north arrow is a glyph
-inside a ring, and `site_map(arrow = "delta")` picks the second of the two.
+inside a ring: `blade` by default, a five-cornered sail drawn with straight edges,
+with `site_map(arrow = "sastrugi")` for the curved wind-carved ridge and
+`arrow = "dart"` for a plain arrowhead.
 
 Both ramps are stretched to each window's own range, the land from the sea to
 the 99.5th percentile of the land inside the drawn frame and the sea floor from

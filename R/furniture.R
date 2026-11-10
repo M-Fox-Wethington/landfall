@@ -46,7 +46,7 @@ SCALE_BLOCK_IN <- 0.22
 # The scale bar and the north arrow, built here rather than in the map, so the
 # rectangles reserved above and the things actually drawn cannot drift apart.
 # The measurement that set those rectangles draws a map with and without this.
-map_furniture <- function(arrow = c("dart", "delta")) {
+map_furniture <- function(arrow = c("blade", "sastrugi", "dart")) {
   arrow <- match.arg(arrow)
   list(
     # A filled alternating bar, not ticks. Tick marks in the coastline blue

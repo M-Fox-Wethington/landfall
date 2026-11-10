@@ -12,7 +12,7 @@ site_map_plot(
   text_pt = 9,
   contours = TRUE,
   panel_in = NULL,
-  arrow = c("dart", "delta")
+  arrow = c("blade", "sastrugi", "dart")
 )
 }
 \arguments{
@@ -32,7 +32,7 @@ site_map_plot(
 \item{panel_in}{The drawn panel's width and height in inches, from
 \code{\link[=map_panel_inches]{map_panel_inches()}}, or \code{NULL} to reserve nothing.}
 
-\item{arrow}{The north arrow glyph, \code{"dart"} or \code{"delta"}; see
+\item{arrow}{The north arrow glyph, \code{"blade"}, \code{"sastrugi"} or \code{"dart"}; see
 \code{\link[=north_arrow_circle]{north_arrow_circle()}}.}
 }
 \value{

@@ -5,7 +5,7 @@
 \title{A circled north arrow}
 \usage{
 north_arrow_circle(
-  glyph = c("dart", "delta"),
+  glyph = c("blade", "sastrugi", "dart"),
   filled = FALSE,
   halo = NA,
   line_width = 1,
@@ -19,7 +19,7 @@ north_arrow_circle(
 )
 }
 \arguments{
-\item{glyph}{\code{"dart"} or \code{"delta"}.}
+\item{glyph}{\code{"blade"}, \code{"sastrugi"} or \code{"dart"}.}
 
 \item{filled}{Fill the ring and draw the glyph in \code{bg}.}
 
@@ -46,16 +46,18 @@ wall sheets. Pass the result to \code{ggspatial::annotation_north_arrow()} as it
 \code{style}, or give it to \code{\link[=site_map_plot]{site_map_plot()}} by name.
 }
 \details{
-\code{glyph = "dart"} is a plain arrowhead. \code{glyph = "delta"} is the swept,
-asymmetric wedge, drawn solid and without the star that sometimes sits
-inside it, which would be mush at this size. \code{filled = TRUE} fills the
-ring and draws the glyph in
-\code{bg} instead, which reads at a smaller size and against a busy map.
+\code{glyph = "blade"} is the house glyph, a five-cornered sail with a hollow luff
+and a broken leech, drawn with straight edges. \code{glyph = "sastrugi"} is the
+curved alternative, a wind-carved snow ridge with a sharp crest, a short
+scoured windward face and a long drift to leeward. \code{glyph = "dart"} is a
+plain arrowhead, for a sheet where either of those reads as a logo. \code{filled = TRUE} fills
+the ring and draws the glyph in \code{bg} instead, which reads at a smaller size
+and against a busy map.
 
 The whole arrow is drawn inside a square viewport centered in the box it is
 given, so the ring is round at any width and height.
 }
 \examples{
 grid::grid.newpage()
-grid::grid.draw(north_arrow_circle("delta"))
+grid::grid.draw(north_arrow_circle("blade"))
 }

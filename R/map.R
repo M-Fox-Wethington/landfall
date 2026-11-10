@@ -94,14 +94,14 @@ named_points <- function(places, neighbors, crs, size_pt) {
 #' @param contours Draw the contours.
 #' @param panel_in The drawn panel's width and height in inches, from
 #'   [map_panel_inches()], or `NULL` to reserve nothing.
-#' @param arrow The north arrow glyph, `"dart"` or `"delta"`; see
+#' @param arrow The north arrow glyph, `"blade"`, `"sastrugi"` or `"dart"`; see
 #'   [north_arrow_circle()].
 #' @return A ggplot object, with the attributes `window`, `panel_in` and
 #'   `barrier`, which [check_map_labels()] reads.
 #' @export
 site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels = 12,
                           text_pt = 9, contours = TRUE, panel_in = NULL,
-                          arrow = c("dart", "delta")) {
+                          arrow = c("blade", "sastrugi", "dart")) {
   arrow <- match.arg(arrow)
   w <- L$window
   site <- site_sf(w$site, w$crs)
@@ -285,7 +285,7 @@ map_caption <- function(L) {
 #'   list from [site_map_layers()].
 #' @export
 site_map <- function(site, radius_km = 25, lon_0 = NULL, places = NULL, label_sites = TRUE,
-                     arrow = c("dart", "delta"), title = NULL,
+                     arrow = c("blade", "sastrugi", "dart"), title = NULL,
                      out_dir = landfall_paths()$output, name = NULL,
                      overwrite = FALSE, width = 12, height = 12, dpi = 300,
                      paths = landfall_paths()) {
