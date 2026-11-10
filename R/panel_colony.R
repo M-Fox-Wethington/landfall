@@ -45,10 +45,6 @@ panel_colony_trend <- function(record, species, type = NULL, new = NULL, base_si
                size = 2.8)
   if (!is.null(new)) {
     nd <- data.frame(season = new$season, count = new$count, lo = new$lo, hi = new$hi)
-    if (has_range) {
-      p <- p + geom_errorbar(data = nd, aes(season, ymin = lo, ymax = hi), width = 0.9,
-                             linewidth = 0.6, color = COLORS$orange)
-    }
     p <- p +
       # The leader goes down first, so the marker's white halo cuts it off at
       # the circle's edge rather than the line being drawn across the circle.
@@ -57,7 +53,16 @@ panel_colony_trend <- function(record, species, type = NULL, new = NULL, base_si
         size = pt_size(base_size), fontface = "bold", color = COLORS$orange,
         nudge_y = 0.08 * y_max, segment.color = COLORS$orange, segment.size = 0.4,
         min.segment.length = 0.1, box.padding = 0.6, point.padding = 0.6, seed = 42) +
-      geom_point(data = nd, aes(season, count), size = 7.0, color = "white") +
+      geom_point(data = nd, aes(season, count), size = 7.0, color = "white")
+    # The accuracy range is a quantity and not a leader, so it goes over the
+    # white halo and under the circle, and reads as one line passing behind
+    # the marker. Beneath the halo as well, the halo erased it either side of
+    # the circle and all that showed was two dashes with nothing joining them.
+    if (has_range) {
+      p <- p + geom_errorbar(data = nd, aes(season, ymin = lo, ymax = hi), width = 0.9,
+                             linewidth = 0.6, color = COLORS$orange)
+    }
+    p <- p +
       geom_point(data = nd, aes(season, count), size = 5.0, color = COLORS$orange) +
       geom_point(data = nd, aes(season, count), size = 5.0, shape = 1, stroke = 0.6,
                  color = alpha(COLORS$title, 0.45))

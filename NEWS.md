@@ -143,6 +143,12 @@ change what existing calls do, and each is listed as such.
   The names are unaffected: the markers are barrier points in the layout, so
   drawing them last cannot cover one, and `check_map_labels()` reports any
   name that lands on one.
+* **Changed.** The new count's accuracy range is drawn over the marker's
+  white halo and under its circle, so it reads as one line passing behind
+  the marker. Under the halo as well, the halo erased it either side of the
+  circle and all that showed was two dashes with nothing joining them. The
+  range is a quantity and not a leader, which is why it is the one line on
+  these figures that is not drawn under everything.
 * The two annotations are built in `map_furniture()`, so the rectangles
   reserved for them and the things actually drawn cannot drift apart.
 
