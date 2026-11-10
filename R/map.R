@@ -146,15 +146,19 @@ site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels 
   if (nrow(L$coast$land)) {
     p <- p + geom_sf(data = L$coast$land, fill = NA, color = MAP_COAST, linewidth = 0.30)
   }
+  # Every leader is drawn before the marker it points at, so a line passes
+  # under its own circle instead of across it, and the marker's white halo
+  # cuts the line off cleanly at the edge. Drawing the markers after the names
+  # cannot cover one, because the markers are barrier points in the layout
+  # above and check_map_labels() reports any name that lands on one.
+  named <- named_points(places, neighbors, w$crs, text_pt)
+  if (!is.null(named) && nrow(named)) p <- p + name_layer(named, barrier)
   if (!is.null(neighbors) && nrow(neighbors)) {
     p <- p +
       geom_sf(data = neighbors, color = "white", size = 2.6, shape = 16) +
       geom_sf(data = neighbors, color = COLORS$slate, size = 1.6, shape = 16)
   }
-  named <- named_points(places, neighbors, w$crs, text_pt)
-  if (!is.null(named) && nrow(named)) p <- p + name_layer(named, barrier)
   p <- p +
-    geom_halo_points(site, color = SITE_COLOR, size = 3.8) +
     # The site's own label is a boxed one and cannot share the pass above. It
     # sits near the middle of the window with nothing to push it, so it does
     # not reach either corner; check_map_labels() reports it if it ever does.
@@ -165,6 +169,7 @@ site_map_plot <- function(L, places = NULL, label_sites = TRUE, max_site_labels 
       label.r = unit(0.10, "lines"), nudge_x = 0.18 * w$radius_km * 1000,
       nudge_y = -0.09 * w$radius_km * 1000, segment.color = COLORS$title,
       segment.size = 0.5, seed = 42, min.segment.length = 0) +
+    geom_halo_points(site, color = SITE_COLOR, size = 3.8) +
     coord_sf(crs = w$crs, xlim = w$xlim, ylim = w$ylim, expand = FALSE,
              datum = sf::st_crs(4326)) +
     map_furniture(arrow) +

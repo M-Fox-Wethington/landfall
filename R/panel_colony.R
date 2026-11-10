@@ -50,15 +50,17 @@ panel_colony_trend <- function(record, species, type = NULL, new = NULL, base_si
                              linewidth = 0.6, color = COLORS$orange)
     }
     p <- p +
-      geom_point(data = nd, aes(season, count), size = 7.0, color = "white") +
-      geom_point(data = nd, aes(season, count), size = 5.0, color = COLORS$orange) +
-      geom_point(data = nd, aes(season, count), size = 5.0, shape = 1, stroke = 0.6,
-                 color = alpha(COLORS$title, 0.45)) +
+      # The leader goes down first, so the marker's white halo cuts it off at
+      # the circle's edge rather than the line being drawn across the circle.
       ggrepel::geom_text_repel(
         data = nd, aes(season, count, label = sprintf("%d: %s %s", season, fmt_n(count), type)),
         size = pt_size(base_size), fontface = "bold", color = COLORS$orange,
         nudge_y = 0.08 * y_max, segment.color = COLORS$orange, segment.size = 0.4,
-        min.segment.length = 0.1, box.padding = 0.6, point.padding = 0.6, seed = 42)
+        min.segment.length = 0.1, box.padding = 0.6, point.padding = 0.6, seed = 42) +
+      geom_point(data = nd, aes(season, count), size = 7.0, color = "white") +
+      geom_point(data = nd, aes(season, count), size = 5.0, color = COLORS$orange) +
+      geom_point(data = nd, aes(season, count), size = 5.0, shape = 1, stroke = 0.6,
+                 color = alpha(COLORS$title, 0.45))
   }
   types_present <- intersect(names(shapes), unique(d$type))
   n_types <- length(types_present)

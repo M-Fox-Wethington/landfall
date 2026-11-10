@@ -137,6 +137,12 @@ change what existing calls do, and each is listed as such.
   of nothing around the window.
 * `site_map()` wraps its caption. It never did, and the caption had grown long
   enough to run off the page.
+* **Changed.** Every leader is drawn before the marker it points at, on the
+  map and in the chart, so a line passes under its own circle instead of
+  across it and the marker's white halo cuts it off at the circle's edge.
+  The names are unaffected: the markers are barrier points in the layout, so
+  drawing them last cannot cover one, and `check_map_labels()` reports any
+  name that lands on one.
 * The two annotations are built in `map_furniture()`, so the rectangles
   reserved for them and the things actually drawn cannot drift apart.
 
