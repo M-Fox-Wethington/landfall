@@ -37,3 +37,24 @@ test_that("a missing layer is reported with the setting to change", {
   expect_false(landfall:::has_path(list(), "coastline"))
   expect_false(landfall:::has_path(list(coastline = "nope.shp"), "coastline"))
 })
+
+test_that("a default layer is the first candidate that is on disk", {
+  dir <- withr::local_tempdir()
+  dir.create(file.path(dir, "add_v7_11"), recursive = TRUE)
+  here <- file.path(dir, "add_v7_11", "add_rock_outcrop_high_res_polygon_v7_11.gpkg")
+  writeLines("x", here)
+  withr::local_options(landfall.paths = list())
+  landfall_paths(spatial = dir)
+  # The release the package used to name is not here and this one is, so the
+  # default follows the disk rather than a release pinned years ago.
+  expect_equal(normalizePath(landfall_paths()$rock, winslash = "/"),
+               normalizePath(here, winslash = "/"))
+})
+
+test_that("a default names a path to look at even when no candidate is on disk", {
+  withr::local_options(landfall.paths = list())
+  landfall_paths(spatial = "X:/spatial")
+  expect_match(landfall_paths()$rock, "^X:/spatial/")
+  expect_match(landfall_paths()$bathymetry, "IBCSO", fixed = TRUE)
+  expect_false(landfall:::has_path(landfall_paths(), "rock"))
+})

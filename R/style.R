@@ -120,6 +120,12 @@ HYPSO_PALETTE <- c("#f4f8fb", "#e3edf3", "#cfdde7", "#bdcedc",
                    "#a9bdcc", "#94aabb", "#7d97a9", "#677e8e")
 HYPSO_BREAKS  <- c(0, 200, 400, 600, 800, 1200, 1800, 2400)
 
+# The sea-floor ramp, pale in the shallows and deepening offshore, in the
+# depth colors of the BRI wall sheets. Like the land ramp it is stretched to
+# the window, and the square root of the depth puts more of the ramp in the
+# shallows, which is the water a landing party is in.
+BATHY_PALETTE <- c("#c6d6e0", "#b5c9d5", "#a7becd", "#99b3c5", "#88a5bb")
+
 # geom_text() size from a size in points. It is called pt_size and not pt
 # because pt is the t distribution in the stats package, and a one-letter
 # shadow of a base function is a trap this project has already paid for.

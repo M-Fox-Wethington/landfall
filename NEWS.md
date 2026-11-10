@@ -119,7 +119,22 @@ change what existing calls do, and each is listed as such.
   triangle. `north_arrow_circle()` draws a plain arrowhead or a swept delta
   and takes ggspatial's own style arguments, so it can be used in any map;
   `site_map(arrow = "delta")` and `site_report(arrow = "delta")` pick the
-  second.
+  second. The delta is asymmetric, a good deal taller than it is wide, with a
+  long left edge sweeping to a tip at the very bottom and a shorter right one;
+  its four corners and the curves between them were fitted to a shape
+  measured off a drawing rather than drawn from memory, which produced a
+  chevron four times running.
+* **Changed.** The sea floor is tinted by depth from the IBCSO v2 bed model
+  when `landfall_paths()$bathymetry` points at one, and keeps the flat ocean
+  color when it does not, so a window with no soundings in it looks like one.
+  The ramp is stretched to the window the way the land ramp is, to the 99.5th
+  percentile of the depth inside the drawn frame, and the square root of the
+  depth puts more of it in the shallows, which is the water a landing party
+  is in. The caption names the depth it runs to. IBCSO is a 500 m grid, about
+  a tenth of an inch on a 25 km map, so it is cropped in its own coordinates
+  and resampled onto the relief's grid; the crop's margin is counted in the
+  bed model's own cells, because a margin shorter than one cell leaves a rim
+  of nothing around the window.
 * `site_map()` wraps its caption. It never did, and the caption had grown long
   enough to run off the page.
 * The two annotations are built in `map_furniture()`, so the rectangles
@@ -152,6 +167,18 @@ change what existing calls do, and each is listed as such.
   omitted argument, so a setting could only be replaced.
 * A vector layer is filtered in its own coordinate system. The filter had been
   written in EPSG:3031 whatever the file held.
+* **Changed.** The ADD layer defaults are the first of a short list of
+  candidate names that is on disk, so the high-resolution coastline and the
+  rock outcrops follow a v7.11 or v7.12 release where one is there. The ADD
+  renames these files at every release and a default pinned to one of them
+  goes quietly missing. Setting the path by hand still pins a release.
+* The contour and rock layers are left out with a message when the file is
+  there but cannot be read, rather than stopping the map. A file can report
+  its full size and still throw when anything asks for its bytes, which is
+  what a layer looks like once cloud storage has turned it back into a
+  placeholder.
+* `landfall_paths()` gained `bathymetry`, which defaults to
+  `ibcso_v2/IBCSO_v2_bed.nc` under `spatial`.
 * `rema_fetch_tiles()` checks whether the mosaic serves a tile before
   downloading, returns a `status` for each one, and checks that the elevation
   file was saved. It had marked a tile fetched without reading the result of

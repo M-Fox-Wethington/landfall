@@ -15,6 +15,7 @@ landfall_paths(
   iceshelves = NULL,
   rock = NULL,
   contours = NULL,
+  bathymetry = NULL,
   output = NULL,
   terra_tmp = NULL,
   reset = FALSE
@@ -36,6 +37,8 @@ package's cache folder from \code{\link[tools:userdir]{tools::R_user_dir()}}.}
 
 \item{coastline_hr, coastline, iceshelves, rock, contours}{Paths to the ADD
 layers.}
+
+\item{bathymetry}{Path to a bed or bathymetry model, or \code{NULL}.}
 
 \item{output}{Folder the figure functions write to. While it is \code{NULL},
 the default, the figure functions return their plots and write nothing.}
@@ -73,9 +76,16 @@ version from the file name.
 \code{Continent_ADD/Antarctica_Coastline_med_res_poly.shp} and
 \code{iceshelves/medium_res_IceShelfs.shp}, the medium-resolution layers, used
 when the high-resolution file is absent.
-\item \code{rock}: \code{add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp}.
+\item \code{rock}: the high-resolution rock outcrop polygons, from \verb{add_v7_11/} or
+from \verb{add_rock_outcrop/}.
 \item \code{contours}: \code{add_contours/add_contours_medium_res_v7.3.gpkg}.
+\item \code{bathymetry}: \code{ibcso_v2/IBCSO_v2_bed.nc}, the IBCSO v2 bed model, which
+is not an ADD layer. The sea floor is tinted from it when it is on disk.
 }
+
+Each of those has more than one name across the ADD releases, so the
+default is the first of a short list of candidates that is on disk. Set
+the path by hand to pin a release.
 
 Elevation comes from the REMA v2.0 32 m tiles of the Polar Geospatial
 Center, kept as \verb{\{row\}_\{col\}_32m_v2.0_dem.tif} in \code{rema_dir};

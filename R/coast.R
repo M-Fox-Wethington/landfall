@@ -58,6 +58,20 @@ read_in_window <- function(path, window, layer = NULL) {
   sf::st_transform(x, window$crs)
 }
 
+# Read a layer the map can do without, and say so when it cannot be read.
+#
+# A file can be on disk, report its full size, and still throw when anything
+# asks for its bytes: that is what a layer looks like once cloud storage has
+# turned it back into a placeholder. The map is then drawn without it, and the
+# reason is said out loud rather than left to look like an empty window.
+optional_layer <- function(path, window, what) {
+  tryCatch(read_in_window(path, window), error = function(e) {
+    message(sprintf("The %s layer at %s could not be read (%s); the map is drawn without it.",
+                    what, path, conditionMessage(e)))
+    NULL
+  })
+}
+
 # The column that classifies the high-resolution coastline polygons.
 coast_class_column <- function(x) {
   for (nm in c("surface", "SURFACE", "class", "CLASS", "type")) if (nm %in% names(x)) return(nm)
@@ -112,8 +126,8 @@ load_coast <- function(window, paths = landfall_paths()) {
 load_contours <- function(window, levels = seq(50, 2500, by = 50), major = 200,
                           paths = landfall_paths()) {
   if (!has_path(paths, "contours")) return(NULL)
-  ct <- read_in_window(paths$contours, window)
-  if (!nrow(ct)) return(NULL)
+  ct <- optional_layer(paths$contours, window, "contour")
+  if (is.null(ct) || !nrow(ct)) return(NULL)
   ct <- ct |> dplyr::rename(level = contour) |> mutate(level = as.numeric(level)) |>
     filter(level %in% levels)
   ct$is_major <- ct$level %% major == 0
@@ -129,7 +143,7 @@ load_contours <- function(window, levels = seq(50, 2500, by = 50), major = 200,
 #' @export
 load_rock <- function(window, paths = landfall_paths()) {
   if (!has_path(paths, "rock")) return(NULL)
-  rock <- tryCatch(read_in_window(paths$rock, window), error = function(e) NULL)
+  rock <- optional_layer(paths$rock, window, "rock outcrop")
   if (is.null(rock) || !nrow(rock)) return(NULL)
   rock
 }

@@ -14,7 +14,7 @@
 
 # Bump this when the recipe changes, so every cache built by an older one is
 # rebuilt rather than reused.
-TERRAIN_RECIPE <- "2"
+TERRAIN_RECIPE <- "3"
 
 # Land below the corrected sea surface still sits at the bottom of the ramp
 # instead of being dropped, because a cell the coastline calls land is land
@@ -31,6 +31,33 @@ measure_sea_level <- function(dem, land, min_cells = 10000) {
   v <- v[!is.na(v)]
   if (length(v) < min_cells) return(NA_real_)
   stats::median(v)
+}
+
+# The sea floor over the window, on the relief's own grid.
+#
+# IBCSO v2 is a bed model of the whole Southern Ocean on a 500 m grid, 19,200
+# cells square, so it is cropped in its own coordinates before anything is
+# reprojected. Its cell is about a tenth of an inch on a 25 km site map, which
+# is why it is resampled rather than drawn as it is stored.
+window_bathymetry <- function(window, template, paths) {
+  f <- paths[["bathymetry"]]
+  if (is.null(f) || !file.exists(f)) return(NULL)
+  b <- tryCatch(terra::rast(f), error = function(e) NULL)
+  if (is.null(b)) return(NULL)
+  box <- sf::st_as_sfc(sf::st_bbox(
+    c(xmin = window$xlim[1] - window$pad_m, xmax = window$xlim[2] + window$pad_m,
+      ymin = window$ylim[1] - window$pad_m, ymax = window$ylim[2] + window$pad_m),
+    crs = window$crs))
+  bb <- sf::st_bbox(sf::st_transform(box, sf::st_crs(terra::crs(b))))
+  # The margin is counted in the bed model's own cells and not in meters. A
+  # bilinear value at the window's edge needs a neighbor outside the window,
+  # and a fixed margin shorter than one cell leaves a rim of nothing around it.
+  margin <- max(5000, 4 * max(terra::res(b)))
+  e <- terra::ext(bb[["xmin"]] - margin, bb[["xmax"]] + margin,
+                  bb[["ymin"]] - margin, bb[["ymax"]] + margin)
+  near <- tryCatch(terra::crop(b, e), error = function(e) NULL)
+  if (is.null(near) || terra::ncell(near) == 0) return(NULL)
+  tryCatch(terra::project(near, template, method = "bilinear"), error = function(e) NULL)
 }
 
 # A file's identity for the cache signature: its name, its size and when it was
@@ -50,7 +77,7 @@ file_identity <- function(files) {
 # shading, the ramp or the versions of the layers the model is masked to, so
 # the cache is reused only when all of this matches.
 terrain_signature <- function(window, coast, grid_res, z_factor, shadow_floor,
-                              collar_m, elev_source, elev_files) {
+                              collar_m, elev_source, elev_files, bathy_file) {
   c(paste0("recipe=", TERRAIN_RECIPE),
     paste0("code=", window$site$code),
     sprintf("lon=%.6f", window$site$lon),
@@ -71,7 +98,10 @@ terrain_signature <- function(window, coast, grid_res, z_factor, shadow_floor,
     paste0("palette=", paste(HYPSO_PALETTE, collapse = ",")),
     paste0("breaks=stretched-continuous:", paste(HYPSO_BREAKS, collapse = ",")),
     paste0("ocean=", MAP_OCEAN),
-    paste0("bare_land=", MAP_LAND_BARE))
+    paste0("bare_land=", MAP_LAND_BARE),
+    paste0("bathy_files=", file_identity(bathy_file)),
+    paste0("bathy_palette=", paste(BATHY_PALETTE, collapse = ",")),
+    paste0("bathy_stretch=sqrt-995"))
 }
 
 #' Build the relief for a window
@@ -90,8 +120,9 @@ terrain_signature <- function(window, coast, grid_res, z_factor, shadow_floor,
 #'
 #' The hillshade is computed on the model cut to a collar beyond the drawn land,
 #' so slopes at the shore still have neighbors, and the coloring then uses the
-#' coastline itself. Water takes the ocean color. Land for which REMA holds no
-#' height takes a flat land tint and the share of it is reported, because
+#' coastline itself. Water takes a depth tint from the IBCSO v2 bed model where
+#' one is on disk, and the flat ocean color where it is not. Land for which REMA
+#' holds no height takes a flat land tint and the share of it is reported, because
 #' painting it as ocean would invent open water where the coastline says there
 #' is ground.
 #'
@@ -111,8 +142,9 @@ terrain_signature <- function(window, coast, grid_res, z_factor, shadow_floor,
 #' @param rebuild Build again even when a matching cache is on disk.
 #' @param paths The list from [landfall_paths()].
 #' @return A list with `rgb`, a three-band SpatRaster, `source` (`"32 m"` or
-#'   `"1 km"`), `grid_res` and `sea_level`, the separation taken off the model
-#'   in meters.
+#'   `"1 km"`), `grid_res`, `sea_level`, the separation taken off the model in
+#'   meters, `ramp_max`, the height the land tint runs to, and `depth_max`, the
+#'   depth the sea-floor tint runs to, both stretched to this window.
 #' @export
 build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
                                shadow_floor = 0.55, collar_m = 60, rebuild = FALSE,
@@ -133,8 +165,9 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
   if (is.null(grid_res)) grid_res <- if (elev_source == "32 m") 50 else 200
   elev_files <- if (all(have)) tile_files else paths$rema_1km
 
+  bathy_file <- if (has_path(paths, "bathymetry")) paths[["bathymetry"]] else NA_character_
   sig <- terrain_signature(window, coast, grid_res, z_factor, shadow_floor, collar_m,
-                           elev_source, elev_files)
+                           elev_source, elev_files, bathy_file)
   if (!rebuild && file.exists(rgb_path) && file.exists(sig_path) &&
       identical(readLines(sig_path, warn = FALSE), sig)) {
     meta <- readLines(meta_path, warn = FALSE)
@@ -142,7 +175,8 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
     return(list(rgb = terra::rast(rgb_path), source = meta[1],
                 grid_res = as.numeric(meta[2]),
                 sea_level = if (length(meta) >= 3) as.numeric(meta[3]) else NA_real_,
-                ramp_max = if (length(meta) >= 4) as.numeric(meta[4]) else NA_real_))
+                ramp_max = if (length(meta) >= 4) as.numeric(meta[4]) else NA_real_,
+                depth_max = if (length(meta) >= 5) as.numeric(meta[5]) else NA_real_))
   }
   if (file.exists(rgb_path)) {
     message("The cached relief for this window was built from different inputs; rebuilding.")
@@ -235,6 +269,41 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
   bare_land <- is_land & !has_dem
   water     <- !is_land
 
+  # The sea floor, tinted by depth where a bed model covers the window. The
+  # ramp is stretched the way the land ramp is, to the 99.5th percentile of
+  # the depth inside the drawn frame, because a site's own water runs to a few
+  # hundred meters and a scale built for the continental slope would draw the
+  # whole window in one color. The square root puts more of the ramp in the
+  # shallows. Water the model does not reach keeps the flat ocean color, since
+  # a window with no soundings in it should look like one.
+  sea <- NULL
+  sea_ok <- rep(FALSE, length(v_dem))
+  depth_max <- NA_real_
+  if (any(water)) {
+    bathy <- window_bathymetry(window, dem, paths)
+    if (!is.null(bathy)) {
+      depth <- pmax(0, -terra::values(bathy, mat = FALSE))
+      xy <- terra::xyFromCell(dem, seq_len(terra::ncell(dem)))
+      in_frame <- xy[, 1] >= window$xlim[1] & xy[, 1] <= window$xlim[2] &
+                  xy[, 2] >= window$ylim[1] & xy[, 2] <= window$ylim[2]
+      rm(xy)
+      d_frame <- depth[water & in_frame & !is.na(depth)]
+      if (length(d_frame) >= 100) depth_max <- as.numeric(stats::quantile(d_frame, 0.995))
+      if (!is.na(depth_max) && depth_max >= 20) {
+        sea_ok <- water & !is.na(depth)
+        sea <- matrix(0, nrow = length(v_dem), ncol = 3)
+        sea[sea_ok, ] <- grDevices::colorRamp(BATHY_PALETTE, space = "Lab")(
+          sqrt(pmin(1, depth[sea_ok] / depth_max))) / 255
+        message(sprintf(paste("Tinting the sea floor from the surface to %.0f m, the 99.5th",
+                              "percentile of the depth in the frame; the deepest water",
+                              "here is %.0f m."), depth_max, max(d_frame)))
+      } else {
+        depth_max <- NA_real_
+        message("Too little depth in this window to tint the sea floor; it is drawn flat.")
+      }
+    }
+  }
+
   # The tint runs continuously between the eight anchors rather than stepping
   # through them. Eight flat steps over a kilometer of relief print as
   # hard-edged bands that a reader takes for contours nobody drew. Each cell's
@@ -258,6 +327,7 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
     v[relief]    <- pmin(1, tint[relief, ch] * shade[relief])
     v[bare_land] <- bare[ch, 1]
     v[water]     <- ocean[ch, 1]
+    if (!is.null(sea)) v[sea_ok] <- sea[sea_ok, ch]
     terra::setValues(terra::rast(dem), round(v * 255))
   })
   rgb <- terra::rast(bands)
@@ -265,10 +335,10 @@ build_site_terrain <- function(window, coast, grid_res = NULL, z_factor = 4,
   rgb <- terra::writeRaster(rgb, rgb_path, overwrite = TRUE, datatype = "INT1U",
                             gdal = c("COMPRESS=LZW", "TILED=YES"))
   writeLines(c(elev$source, as.character(grid_res), as.character(sea_level),
-               as.character(ramp_max)), meta_path)
+               as.character(ramp_max), as.character(depth_max)), meta_path)
   writeLines(sig, sig_path)
   list(rgb = rgb, source = elev$source, grid_res = grid_res, sea_level = sea_level,
-       ramp_max = ramp_max)
+       ramp_max = ramp_max, depth_max = depth_max)
 }
 
 #' Remove cached relief rasters

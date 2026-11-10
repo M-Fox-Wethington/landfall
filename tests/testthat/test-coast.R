@@ -85,3 +85,20 @@ test_that("missing coastline files are reported", {
   expect_null(load_contours(w, paths = list()))
   expect_null(load_rock(w, paths = list()))
 })
+
+test_that("a layer that exists but cannot be read is reported and left out", {
+  w <- site_window(site_point("Test", lon = -62.5327, lat = -64.8383), radius_km = 10)
+  # A file of the right name holding bytes no reader can make a layer out of,
+  # which is what a cloud-storage placeholder looks like from inside R.
+  f <- withr::local_tempfile(fileext = ".gpkg")
+  writeLines("not a GeoPackage", f)
+  expect_message(got <- landfall:::optional_layer(f, w, "rock outcrop"),
+                 "could not be read")
+  expect_null(got)
+  # The map functions that use it hand back nothing rather than stopping, so
+  # one unreadable layer does not cost the whole map.
+  suppressMessages({
+    expect_null(load_rock(w, list(rock = f)))
+    expect_null(load_contours(w, paths = list(contours = f)))
+  })
+})

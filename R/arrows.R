@@ -15,17 +15,8 @@ ARROW_CY <- 0.40
 ARROW_R  <- 0.37
 ARROW_N_Y <- 0.93
 
-# A quadratic curve, sampled, so an edge can be drawn as a polygon.
-quad_curve <- function(p0, p1, p2, n = 30) {
-  t <- seq(0, 1, length.out = n)
-  cbind((1 - t)^2 * p0[1] + 2 * (1 - t) * t * p1[1] + t^2 * p2[1],
-        (1 - t)^2 * p0[2] + 2 * (1 - t) * t * p1[2] + t^2 * p2[2])
-}
-
-# A cubic curve. The delta's outer edge needs one, because it runs as a wedge
-# down from the apex and then flares out to the foot, and a quadratic can do
-# one or the other and not both.
-cubic_curve <- function(p0, p1, p2, p3, n = 40) {
+# A cubic curve, sampled, so an edge can be drawn as a polygon.
+cubic_curve <- function(p0, p1, p2, p3, n = 45) {
   t <- seq(0, 1, length.out = n)
   cbind((1 - t)^3 * p0[1] + 3 * (1 - t)^2 * t * p1[1] +
           3 * (1 - t) * t^2 * p2[1] + t^3 * p3[1],
@@ -33,24 +24,33 @@ cubic_curve <- function(p0, p1, p2, p3, n = 40) {
           3 * (1 - t) * t^2 * p2[2] + t^3 * p3[2])
 }
 
-# A right half mirrored into a closed outline.
-mirror_half <- function(m) {
-  rbind(m, cbind(1 - m[rev(seq_len(nrow(m))), 1], m[rev(seq_len(nrow(m))), 2]))
-}
-
 # The dart: a sharp tip, two feet and a notch between them, in its own unit box.
 dart_outline <- function() {
   cbind(c(0.50, 0.88, 0.50, 0.12), c(1.00, 0.02, 0.34, 0.02))
 }
 
-# The delta: a sharp apex, a wedge body, outer edges that flare to two swept
-# feet, and a deep notch between them.
+# How wide the delta is drawn for a given height. It is a good deal taller
+# than it is wide, which is the first thing that goes wrong when the shape is
+# drawn from memory.
+DELTA_ASPECT <- 0.626
+
+# The delta: an apex at the top, a long left edge sweeping out to a tip at the
+# very bottom, a concave base that climbs to a high point right of centre, and
+# a shorter right edge running back up to the apex. It is not symmetric, and
+# the asymmetry is the whole character of it. The four corners and the curves
+# between them were fitted to a shape measured off a drawing of it, within
+# about one part in a hundred of the box, which is a few thousandths of an
+# inch at the size the arrow is drawn.
 delta_outline <- function() {
-  apex <- c(0.50, 1.00)
-  foot <- c(0.96, 0.02)
-  mirror_half(rbind(
-    cubic_curve(apex, c(0.70, 0.78), c(0.74, 0.26), foot),
-    quad_curve(foot, c(0.76, 0.08), c(0.50, 0.38))))
+  apex  <- c(0.503, 1.000)
+  left  <- c(0.006, 0.000)
+  peak  <- c(0.676, 0.368)
+  right <- c(1.000, 0.095)
+  rbind(
+    cubic_curve(apex,  c(0.200, 0.690), c(0.022, 0.310), left),
+    cubic_curve(left,  c(0.170, 0.145), c(0.500, 0.358), peak),
+    cubic_curve(peak,  c(0.790, 0.355), c(0.925, 0.245), right),
+    cubic_curve(right, c(0.950, 0.400), c(0.775, 0.745), apex))
 }
 
 # Fit an outline into the ring, keeping its proportions.
@@ -65,8 +65,10 @@ fit_in_ring <- function(xy, height, aspect) {
 #' wall sheets. Pass the result to `ggspatial::annotation_north_arrow()` as its
 #' `style`, or give it to [site_map_plot()] by name.
 #'
-#' `glyph = "dart"` is a plain arrowhead. `glyph = "delta"` is a swept wedge
-#' with two flared feet. `filled = TRUE` fills the ring and draws the glyph in
+#' `glyph = "dart"` is a plain arrowhead. `glyph = "delta"` is the swept,
+#' asymmetric wedge, drawn solid and without the star that sometimes sits
+#' inside it, which would be mush at this size. `filled = TRUE` fills the
+#' ring and draws the glyph in
 #' `bg` instead, which reads at a smaller size and against a busy map.
 #'
 #' The whole arrow is drawn inside a square viewport centered in the box it is
@@ -98,7 +100,7 @@ north_arrow_circle <- function(glyph = c("dart", "delta"), filled = FALSE,
   # The delta is wider and shorter than the dart, so each is sized to sit
   # inside the ring with the same clearance.
   p <- if (glyph == "delta") {
-    fit_in_ring(xy, 1.44 * ARROW_R, 0.86)
+    fit_in_ring(xy, 1.52 * ARROW_R, DELTA_ASPECT)
   } else {
     fit_in_ring(xy, 1.55 * ARROW_R, 0.78)
   }

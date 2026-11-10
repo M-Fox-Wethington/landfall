@@ -67,10 +67,18 @@ on its own.
 
 | Setting | Default under `spatial` | Source |
 |---|---|---|
-| `coastline_hr` | `add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg` | ADD v7.10 high-resolution coastline polygons, UK Polar Data Centre, CC BY 4.0 |
+| `coastline_hr` | `add_v7_12/`, `add_v7_11/` or `add_coastline_high_res/` | ADD high-resolution coastline polygons, UK Polar Data Centre, CC BY 4.0 |
 | `coastline`, `iceshelves` | `Continent_ADD/Antarctica_Coastline_med_res_poly.shp`, `iceshelves/medium_res_IceShelfs.shp` | ADD medium-resolution layers, used when the high-resolution file is absent |
-| `rock` | `add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp` | ADD high-resolution rock outcrops |
+| `rock` | `add_v7_12/`, `add_v7_11/` or `add_rock_outcrop/` | ADD high-resolution rock outcrops |
 | `contours` | `add_contours/add_contours_medium_res_v7.3.gpkg` | ADD medium-resolution contours |
+| `bathymetry` | `ibcso_v2/IBCSO_v2_bed.nc` | IBCSO v2 bed model, AWI, CC BY 4.0. Not an ADD layer |
+
+The coastline and the rock outcrops are each named differently in every ADD
+release, so their default is the first of a short list of candidates that is
+on disk. Setting the path by hand pins a release. The sea floor is tinted
+where `bathymetry` points at a bed model and drawn flat where it does not,
+and a contour or rock layer that cannot be read is left out with a message
+rather than stopping the map.
 
 Elevation comes from the REMA v2.0 32 m tiles of the Polar Geospatial Center,
 which `pack_sites()` fetches into `rema_dir` as a site needs them. Each tile

@@ -24,8 +24,15 @@
 #'   `Continent_ADD/Antarctica_Coastline_med_res_poly.shp` and
 #'   `iceshelves/medium_res_IceShelfs.shp`, the medium-resolution layers, used
 #'   when the high-resolution file is absent.
-#' * `rock`: `add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp`.
+#' * `rock`: the high-resolution rock outcrop polygons, from `add_v7_11/` or
+#'   from `add_rock_outcrop/`.
 #' * `contours`: `add_contours/add_contours_medium_res_v7.3.gpkg`.
+#' * `bathymetry`: `ibcso_v2/IBCSO_v2_bed.nc`, the IBCSO v2 bed model, which
+#'   is not an ADD layer. The sea floor is tinted from it when it is on disk.
+#'
+#' Each of those has more than one name across the ADD releases, so the
+#' default is the first of a short list of candidates that is on disk. Set
+#' the path by hand to pin a release.
 #'
 #' Elevation comes from the REMA v2.0 32 m tiles of the Polar Geospatial
 #' Center, kept as `{row}_{col}_32m_v2.0_dem.tif` in `rema_dir`;
@@ -42,6 +49,7 @@
 #' @param spatial Folder holding the ADD layers in the layout described below.
 #' @param coastline_hr,coastline,iceshelves,rock,contours Paths to the ADD
 #'   layers.
+#' @param bathymetry Path to a bed or bathymetry model, or `NULL`.
 #' @param output Folder the figure functions write to. While it is `NULL`,
 #'   the default, the figure functions return their plots and write nothing.
 #' @param terra_tmp Folder for terra's temporary rasters.
@@ -61,12 +69,14 @@
 #' @export
 landfall_paths <- function(cache = NULL, rema_dir = NULL, rema_1km = NULL, terrain_cache = NULL,
                            spatial = NULL, coastline_hr = NULL, coastline = NULL,
-                           iceshelves = NULL, rock = NULL, contours = NULL, output = NULL,
+                           iceshelves = NULL, rock = NULL, contours = NULL,
+                           bathymetry = NULL, output = NULL,
                            terra_tmp = NULL, reset = FALSE) {
   given <- list(cache = cache, rema_dir = rema_dir, rema_1km = rema_1km,
                 terrain_cache = terrain_cache, spatial = spatial, coastline_hr = coastline_hr,
                 coastline = coastline, iceshelves = iceshelves, rock = rock,
-                contours = contours, output = output, terra_tmp = terra_tmp)
+                contours = contours, bathymetry = bathymetry, output = output,
+                terra_tmp = terra_tmp)
   given <- given[!vapply(given, is.null, logical(1))]
   stored <- if (reset) list() else getOption("landfall.paths", list())
   setting <- reset || length(given) > 0
@@ -84,18 +94,35 @@ landfall_paths <- function(cache = NULL, rema_dir = NULL, rema_1km = NULL, terra
   if (is.null(p[["rema_dir"]])) p[["rema_dir"]] <- file.path(p[["cache"]], "rema")
   if (is.null(p[["terrain_cache"]])) p[["terrain_cache"]] <- file.path(p[["cache"]], "terrain")
   if (!is.null(p[["spatial"]])) {
-    under <- function(rel) file.path(p[["spatial"]], rel)
-    if (is.null(p[["coastline_hr"]])) p[["coastline_hr"]] <- under("add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg")
+    under <- function(...) first_existing(p[["spatial"]], c(...))
+    if (is.null(p[["coastline_hr"]])) p[["coastline_hr"]] <- under(
+      "add_v7_12/add_coastline_high_res_polygon_v7_12.gpkg",
+      "add_v7_11/add_coastline_high_res_polygon_v7_11.gpkg",
+      "add_coastline_high_res/add_coastline_high_res_polygon_v7_10.gpkg")
     if (is.null(p[["coastline"]]))    p[["coastline"]]    <- under("Continent_ADD/Antarctica_Coastline_med_res_poly.shp")
     if (is.null(p[["iceshelves"]]))   p[["iceshelves"]]   <- under("iceshelves/medium_res_IceShelfs.shp")
-    if (is.null(p[["rock"]]))         p[["rock"]]         <- under("add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp")
+    if (is.null(p[["rock"]]))         p[["rock"]]         <- under(
+      "add_v7_12/add_rock_outcrop_high_res_polygon_v7_12.gpkg",
+      "add_v7_11/add_rock_outcrop_high_res_polygon_v7_11.gpkg",
+      "add_rock_outcrop/add_rock_outcrop_high_res_polygon_v7.3.shp")
     if (is.null(p[["contours"]]))     p[["contours"]]     <- under("add_contours/add_contours_medium_res_v7.3.gpkg")
+    if (is.null(p[["bathymetry"]]))   p[["bathymetry"]]   <- under("ibcso_v2/IBCSO_v2_bed.nc")
   }
   if (setting && !is.null(p[["terra_tmp"]])) {
     dir.create(p[["terra_tmp"]], recursive = TRUE, showWarnings = FALSE)
     terra::terraOptions(tempdir = p[["terra_tmp"]], progress = 0)
   }
   if (setting) invisible(p) else p
+}
+
+# The first of a set of candidate files under a folder that is on disk. When
+# none of them is, the first is returned anyway, so the message that follows
+# names a path the reader can go and look at. The ADD renames these layers at
+# every release, and a default pinned to one release goes quietly missing.
+first_existing <- function(dir, rel) {
+  p <- file.path(dir, rel)
+  hit <- p[file.exists(p)]
+  if (length(hit)) hit[1] else p[1]
 }
 
 # A path that must be set and must exist, with a message that says what to set.

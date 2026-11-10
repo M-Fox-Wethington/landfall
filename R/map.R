@@ -244,9 +244,17 @@ map_caption <- function(L) {
     sprintf(" Land is tinted from the sea to %.0f m, stretched to this window.",
             top)
   }
+  # The sea floor is stretched to the window in the same way, so it too is
+  # read within one map and not between two.
+  deep <- L$terrain$depth_max
+  floor_tint <- if (is.null(deep) || is.na(deep)) "" else {
+    sprintf(" The sea floor is tinted from the surface to %.0f m (IBCSO v2, Dorschel et al.).",
+            deep)
+  }
   sprintf(paste("Relief: REMA v2.0 %s mosaic (Howat et al.), Polar Geospatial Center,",
-                "%g m grid; %s.%s %s: SCAR Antarctic Digital Database (%s)."),
-          L$terrain$source, L$terrain$grid_res, datum, tint, layers, L$coast$source)
+                "%g m grid; %s.%s%s %s: SCAR Antarctic Digital Database (%s)."),
+          L$terrain$source, L$terrain$grid_res, datum, tint, floor_tint, layers,
+          L$coast$source)
 }
 
 #' Figure: the map of a site's surroundings

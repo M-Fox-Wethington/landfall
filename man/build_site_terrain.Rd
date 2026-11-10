@@ -37,8 +37,9 @@ hillshade, in meters.}
 }
 \value{
 A list with \code{rgb}, a three-band SpatRaster, \code{source} (\code{"32 m"} or
-\code{"1 km"}), \code{grid_res} and \code{sea_level}, the separation taken off the model
-in meters.
+\code{"1 km"}), \code{grid_res}, \code{sea_level}, the separation taken off the model in
+meters, \code{ramp_max}, the height the land tint runs to, and \code{depth_max}, the
+depth the sea-floor tint runs to, both stretched to this window.
 }
 \description{
 Mosaics the REMA 32 m tiles over the window (or crops the 1 km mosaic when a
@@ -55,8 +56,9 @@ gray-blue above 2400 m in eight steps and shadows stop at \code{shadow_floor}.
 
 The hillshade is computed on the model cut to a collar beyond the drawn land,
 so slopes at the shore still have neighbors, and the coloring then uses the
-coastline itself. Water takes the ocean color. Land for which REMA holds no
-height takes a flat land tint and the share of it is reported, because
+coastline itself. Water takes a depth tint from the IBCSO v2 bed model where
+one is on disk, and the flat ocean color where it is not. Land for which REMA
+holds no height takes a flat land tint and the share of it is reported, because
 painting it as ocean would invent open water where the coastline says there
 is ground.
 

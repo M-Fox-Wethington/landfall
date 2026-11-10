@@ -46,8 +46,10 @@ wall sheets. Pass the result to \code{ggspatial::annotation_north_arrow()} as it
 \code{style}, or give it to \code{\link[=site_map_plot]{site_map_plot()}} by name.
 }
 \details{
-\code{glyph = "dart"} is a plain arrowhead. \code{glyph = "delta"} is a swept wedge
-with two flared feet. \code{filled = TRUE} fills the ring and draws the glyph in
+\code{glyph = "dart"} is a plain arrowhead. \code{glyph = "delta"} is the swept,
+asymmetric wedge, drawn solid and without the star that sometimes sits
+inside it, which would be mush at this size. \code{filled = TRUE} fills the
+ring and draws the glyph in
 \code{bg} instead, which reads at a smaller size and against a busy map.
 
 The whole arrow is drawn inside a square viewport centered in the box it is
